@@ -31,7 +31,7 @@
   #:use-module (srfi srfi-9)
   #:use-module (ice-9 threads)
   #:use-module (rnrs bytevectors)
-  #:use-module (foreign system)
+  #:use-module (system foreign)
   #:use-module (web request)
   #:use-module (web response)
   #:use-module (web server)
