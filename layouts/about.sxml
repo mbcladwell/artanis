@@ -34,12 +34,7 @@
     (a (@ (href "http://szdiy.org"))
        (img (@ (src "http://wiki.szdiy.org/skins/common/images/szdiy.png")
                (height "100") (width "100"))))
-    (br)
-    ;; hitwebcounter Code START
-    (a (@ (id "counter") (href "http://www.hitwebcounter.com/") (target "_blank"))
-           (img (@ (src "http://hitwebcounter.com/counter/counter.php?page=5071476&style=0006&nbdigits=9&type=page&initCount=0") (title "counter with different designs")
-                   (Alt "counter with different designs") (border "0"))))
-))
+    (br)))
 
     (div (@ (id "main") (class "home"))
      (div (@ (class "wrap")) (about-text (inject ,contents)))
@@ -47,10 +42,10 @@
      (p (@ (class "foot up"))
 	(a (@ (href "http://gnu.org/software/artanis")) "Copyright  2015 Free Software Foundation, Inc.")
         " Source: "
-        (a (@ (href "http://github.com/NalaGinrut/artanis")) "Artanis ")
+        (a (@ (href "http://gitlab.com/NalaGinrut/artanis")) "Artanis ")
         "powered by " (a (@ (href "http://www.gnu.org/software/guile/")) "GNU Guile ")
         "This page is Powered by " (a (@ (href "http://wiki.call-cc.org/eggref/4/hyde")) "Hyde of Chicken Scheme")))
-    ;; fork me on github
+    ;; fork me on gitlab
     (a (@ (id "forkme") (href "http://gitlab.com/NalaGinrut/artanis/")) "Fork me on GitLab")
 
     )))
