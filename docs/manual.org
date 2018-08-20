@@ -60,7 +60,7 @@ This is described in full in the licenses.*
 *Install GNU Guile-2.2.2 or higher version:*
 
 Since GNU Artanis-0.2, the GNU Guile-2.2+ is required because of the [[https://www.gnu.org/software/guile/manual/html_node/Non_002dBlocking-I_002fO.html][suspendable-ports]], which is the key to implement asynchronous
-non-blocking server core in GNU Guile.
+non-blocking server core in GNU Artanis.
 
 #+begin_src null
 wget -c ftp://ftp.gnu.org/gnu/guile/guile-2.2.2.tar.xz
@@ -73,25 +73,20 @@ I would NOT recommend you trying to compile/install Guile from Git repo, since i
 
 *Install dependencies:*
 
-+ guile-dbi-2.1.6 *[Optional]*
++ guile-dbi-2.1.7 (The tarball included guile-dbd) *[Optional]*
 #+begin_src null
-wget -c http://download.gna.org/guile-dbi/guile-dbi-2.1.6.tar.gz
-# or mirror
-wget -c https://github.com/yagelix/guile-dbi/archive/guile-dbi-2.1.6.tar.gz
+wget -c https://github.com/opencog/guile-dbi/archive/guile-dbi-2.1.7.tar.gz
 
-tar xvzf guile-dbi-2.1.6.tar.gz
-cd guile-dbi-2.1.6 && ./configure && make
+tar xvzf guile-dbi-2.1.7.tar.gz
+cd guile-dbi-guile-dbi-2.1.7/guile-dbi && ./configure && make
 sudo make install
 #+end_src
 
 + guile-dbd *[Optional]*. The dbd plugins connect to an actual database server.
 #+begin_src null
-wget -c http://download.gna.org/guile-dbi/guile-dbd-mysql-2.1.6.tar.gz
-# or mirror
-wget -c https://github.com/yagelix/guile-dbi/archive/guile-dbd-mysql-2.1.6.tar.gz
 
 tar xvzf guile-dbd-mysql-2.1.6.tar.gz
-cd guile-dbd-mysql-2.1.6 && ./configure && make
+cd guile-dbi-guile-dbi-2.1.7/guile-dbd-mysql && ./configure && make
 sudo make install
 #+end_src
 MySQL is used for the examples in this manual. You may find dbd plugins for other databases [[http://download.gna.org/guile-dbi][here]] or at this
@@ -648,7 +643,7 @@ src_scheme[:exports code]{#:db-name} the DB name to use.
 ** Working with Nginx
 You may try GNU Artanis+Nginx with a reverse proxy.
 
-*/Although GNU Artanis has good server core, I would recommend you use Nginx as the front server. In addition to the enhanced 
+*/Although GNU Artanis has good server core, I would recommend you use Nginx as the front server. In addition to the enhanced
 performance, it'll also be less vulnerable to attacks./*
 
 These are some sample lines for /etc/nginx/nginx.conf:
@@ -1151,7 +1146,7 @@ Sometimes you may need quasiquote to refer to a variable, for example:
 (let ((content "hello world"))
   (tpl->response `(html (body (p (@ (id "content")) ,content)))))
 #+end_src
-Here, the "html" block is being quoted with the backtick, which in combination with 
+Here, the "html" block is being quoted with the backtick, which in combination with
 a "," character before the variable name, makes the variable be referred to instead
 of just passing a string.
 
@@ -1646,7 +1641,7 @@ Let's see a simple example:
   (lambda (rc)
     (if (:auth rc)
         "auth ok"
-	    (throw-auth-needed))))
+            (throw-auth-needed))))
 #+end_src
 
 Another simple way to provide authentication is to compare the passsword stored in a database table:
@@ -1655,7 +1650,7 @@ Another simple way to provide authentication is to compare the passsword stored 
   (lambda (rc) ... ))
 #+END_SRC
 
-NOTE: Assuming *username* and *passwd* are columns of the Person table. 
+NOTE: Assuming *username* and *passwd* are columns of the Person table.
 
 
 You have to define your own checker with the anonymous function src_scheme[:exports code]{(lambda (rc u p) ...)}. #t to show success, and #f to fail.
