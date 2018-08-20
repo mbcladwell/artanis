@@ -410,6 +410,7 @@ It's just simply fetching static file by the URL: http://localhost:3000/path/fil
 Type these code in Guile REPL:
 #+begin_src scheme
 (use-modules (artanis artanis))
+(init-server)
 (get "/hello" (lambda () "hello world"))
 (run #:port 8080)
 #+end_src
