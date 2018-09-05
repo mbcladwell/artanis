@@ -188,6 +188,7 @@ Add a function for adding comments to config.scm
   "
  (use-modules (artanis artanis)
               ;; Put modules you want to be imported here
+              ;; only for this file, not controllers/views
 
               (artanis utils))
  ;; Put whatever you want to be called before server initilization here
