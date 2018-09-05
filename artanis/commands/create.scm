@@ -27,7 +27,7 @@
   #:use-module (ice-9 match))
 
 (define %summary "Create a new Artanis project.")
-
+Add a function for adding comments to config.scm
 (define (show-help)
   (display announce-head)
   (display "\nUsage:\n  art create proj-path\n")
@@ -100,10 +100,20 @@
         ((? list?) (format #f "~{~a~^,~}" v))
         (else v)))
     (define (->cstr ctb)
+      (define (->comments str)
+        (call-with-input-string str
+                                (lambda (port)
+                                  (let lp ((rst-string "")
+                                           (line (read-line port)))
+                                    (if (eof-object? line)
+                                        rst-string
+                                        (lp (string-append rst-string "## " line "\n") (read-line port)))))))
       (call-with-output-string
        (lambda (port)
          (for-each (lambda (c)
                      (match c
+                       ((ns val comments)
+                        (format port "~a~{~a~^.~} = ~a~%" (->comments comments) ns (->proper val)))
                        ((ns val)
                         (format port "~{~a~^.~} = ~a~%" ns (->proper val)))
                        (else (error create-local-config "BUG: Invalid conf value!" c))))
@@ -178,7 +188,6 @@
   "
  (use-modules (artanis artanis)
               ;; Put modules you want to be imported here
-              ;; only for this file, not controllers/views
 
               (artanis utils))
  ;; Put whatever you want to be called before server initilization here
