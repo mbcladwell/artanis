@@ -84,7 +84,7 @@ Hello World
 
 * Use Guile REPL and verify GNU Artanis installation::
 * Simple HTTP server::
-* Try simple URL remappinge::
+* Try simple URL remapping::
 * More complex URL remapping::
 * Regex in URL remapping::
 * Database operating::
@@ -870,7 +870,7 @@ To get current hostname in GNU Artanis environment.
 @menu
 * Use Guile REPL and verify GNU Artanis installation::
 * Simple HTTP server::
-* Try simple URL remappinge::
+* Try simple URL remapping::
 * More complex URL remapping::
 * Regex in URL remapping::
 * Database operating::
@@ -922,8 +922,8 @@ http://127.0.0.1:3000
 Assuming there's a file named "index.html" in the current path. Now you may try @uref{http://localhost:3000/index.html} in your browser.
 It's just simply fetching static file by the URL: @uref{http://localhost:3000/path/filename}
 
-@node Try simple URL remappinge
-@section Try simple URL remappinge
+@node Try simple URL remapping
+@section Try simple URL remapping
 
 Type these code in Guile REPL:
 @example
