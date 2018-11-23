@@ -1096,7 +1096,9 @@
               (dynamic-wind
                 (lambda ()
                   (set! handler
-                    (sigaction SIGINT (lambda (sig) (run-when-sigint-hook)(throw 'interrupt)))))
+                    (sigaction SIGINT (lambda (sig)
+                                        (run-when-sigint-hook)
+                                        (throw 'interrupt)))))
                 thunk
                 (lambda ()
                   (if handler
