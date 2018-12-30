@@ -17,7 +17,7 @@
 * Introduction
 
 #+begin_src nil
-Copyright (C)  2017  Mu Lei known as NalaGinrut.
+Copyright (C)  2018  Mu Lei known as NalaGinrut.
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3
 or any later version published by the Free Software Foundation;
@@ -117,230 +117,7 @@ A configuration file is required when Artanis is run for the first time.
   The configure file must be named src_conf[:exports code]{/etc/artanis/artanis.conf}.
 
 + If you're using application directory, the configure file src_conf[:exports code]{conf/artanis.conf} will be generated automatically for you.
-** Database config
-#+BEGIN_SRC conf
-db.enable = <boolean>
-#+END_SRC
-+ Whether to use a database, if disabled, the database won't be initialized in the beginning, which saves memory and boot time.
-  + Some users may want to use GNU Artanis without configuring any databases, if that's your case please set it to *false* to avoid unintended errors.
 
-#+BEGIN_SRC conf
-db.dbd = mysql | postgresql | sqlite3
-#+END_SRC
-+ What database server should be used, depends on the database installed on your machine.
-  + NOTE: If you use MariaDB then you should set it to mysql.
-
-#+BEGIN_SRC conf
-db.proto = tcp | socketfile
-#+END_SRC
-+ The protocol for connecting the databse. If you use tcp, a socket port must be specified in the address. And if you choose socketfile,
-  then you should specify the unix socket file managed by database server.
-
-#+BEGIN_SRC conf
-db.addr = <string>
-#+END_SRC
-+ The address of the database server, for example, MariaDB by default uses */localhost:3306/*.
-
-#+BEGIN_SRC conf
-db.socketfile = <string>
-#+END_SRC
-+ If you configured the database server to connect to a unix socket file, then you should fill this field with the file name.
-
-#+BEGIN_SRC conf
-db.username = <string>
-#+END_SRC
-+ User name to connect to the database server.
-
-#+BEGIN_SRC conf
-db.passwd = <string>
-#+END_SRC
-+ Password of the user to connect to the database server.
-
-#+BEGIN_SRC conf
-db.name = <string>
-#+END_SRC
-+ The database name.
-
-#+BEGIN_SRC conf
-db.engine = <string>
-#+END_SRC
-+ The engine of the database server.
-  + */NOTE:/* for sqlite3, you must leave this field blank, as src_conf[:exports code]{db.engine = }. If you remove this item, the default value */InnoDB/* will be used.
-
-** Server config
-#+BEGIN_SRC conf
-server.info = <string>
-#+END_SRC
-+ Specify your own server info. It'll be /*Artanis-x.x.x/* by default, adding the artanis version number.
-
-#+BEGIN_SRC conf
-server.nginx = enable | disable
-#+END_SRC
-+ If you want to use Nginx for reversed-proxy, please enable it.
-
-#+BEGIN_SRC conf
-server.charset = <string>
-#+END_SRC
-+ Charset in server side. /*utf-8*/ in default.
-  + /*Note:*/ Don't change it unless you know what you're doing!
-
-#+BEGIN_SRC conf
-server.syspage.path = /etc/artanis/pages
-#+END_SRC
-+ The path of status page. You may customize your own status pages.
-
-#+BEGIN_SRC conf
-server.backlog = <integer>
-#+END_SRC
-+ Backlog of the socket.
-  + /*Note:*/ Don't change it unless you really know what you're doing!
-
-#+BEGIN_SRC conf
-server.wqlen = <integer>
-#+END_SRC
-+ The length of the work queue in Artanis server.
-  + /*Note:*/ added on Artanis-0.2.
-
-#+BEGIN_SRC conf
-server.trigger = edge | level
-#+END_SRC
-+ The trigger mode of epoll.
-  + /*Note:*/ added on Artanis-0.2.
-
-#+BEGIN_SRC conf
-server.engine = ragnarok | guile | fibers | <customized engine>
-#+END_SRC
-+ The server core which is used for holding high concurrent connections. Artanis has a strong server core named [[Ragnarok server core][Ragnarok,]]
-  which is based on [[https://en.wikipedia.org/wiki/Delimited_continuation][delimited continuations]] to provide asynchronous non-blocking high concurrent serving.
-  + You may choose guile inner server which is weak, but useful when you are running Artanis on an operating system lacking key features
-    to run Raganrok. For example, in GNU/Hurd, which has no epoll.
-  + You may choose fibers server implemented with threads and delimited continuations, which is preemptable by the timer you set.
-    For more details please see [[https://github.com/wingo/fibers/wiki/Manual][Fiber Manual]].
-  + /*Note:*/ added on Artanis-0.2.
-  + /*Note:*/ Fibers is supported since Artanis-0.2.5.
-
-#+BEGIN_SRC conf
-server.polltimeout = <integer>
-#+END_SRC
-+ The the timeout for each event polling round, in miliseconds.
-  + The default value is 500 miliseconds.
-  + /*Note:*/ added on Artanis-0.2.
-
-#+BEGIN_SRC conf
-server.bufsize = <integer>
-#+END_SRC
-+ The buffer size of the connecting socket. In [[Ragnarok server core][Ragnarok]], the request handling will be scheduled when the
-  socket buffer is full. This item affects the performance of socket I/O largely. Usually, if you're handling
-  a large amount of small requests, it's better to set the buffer size to a small value. But if you're
-  providing some kind of downloading or uploading service, it's better to set it to a larger one.
-  A large buffer size will increase the latency of unserved requests.
-  Please read the [[Ragnarok server core][Ragnarok]] chapter to learn the design principle, if you need to do some tweaking.
-  + The default value is 12288, say, 12KB.
-  + /*Note:*/ added on Artanis-0.2.
-
-
-#+BEGIN_SRC conf
-server.multi = <boolean>
-#+END_SRC
-+ This is the most significant feature of [[Ragnarok server core][Ragnarok]]. Please remember that *there're no threads in GNU Artanis*.
-  All the tasks are based on [[https://en.wikipedia.org/wiki/Delimited_continuation][delimited continuations]], this kind of design is the so-called [[https://en.wikipedia.org/wiki/Green_threads][Green Threads.]]
-  Then how to take advantage of multi-cores? Fortunately, GNU/Linux has introduced a feature named [[https://lwn.net/Articles/542629/][SO_REUSEPORT]] since 3.9.
-  This feature let us start multiple Artanis instances listening to the same socket port. When requests come, the
-  Linux kernel will do the necessary lock and allocation work for us to dispatch requests to these Artanis instances.
-  This makes GNU Artanis provide performance and stateless perfectly.
-  + The default value is true.
-  + /*Note:*/ added on Artanis-0.2, GNU/Linux-3.9+ is required.
-
-** Websocket config
-#+BEGIN_SRC conf
-websocket.maxpayload = <integer>
-#+END_SRC
-+ The max payload size in bytes.
-
-#+BEGIN_SRC conf
-websocket.minpayload = <integer>
-#+END_SRC
-+ The min payload size in bytes.
-
-#+BEGIN_SRC conf
-websocket.fragment = <integer>
-#+END_SRC
-+ If /fragment/ is larger than zero, then it's the size of the websocket frame fragment.
-+ If /fragment/ is zero, then the websocket frame will not be fragmented.
-
-** Host config
-#+BEGIN_SRC conf
-host.name = enable | disable | <boolean>
-#+END_SRC
-+ If disabled, you will have to use the IP address to connect instead of the hostname. e.g. src_conf[:exports code]{host.addr = 127.0.0.1}.
-
-#+BEGIN_SRC conf
-host.addr = <URL> | <IP>
-#+END_SRC
-+ The URL/IP of your hosting site.
-
-#+BEGIN_SRC conf
-host.port = <integer>
-#+END_SRC
-+ The listening port of your hosting site.
-
-#+BEGIN_SRC conf
-host.family = ipv4 | ipv6
-#+END_SRC
-+ Specify the protocol family
-  + added on Artanis-0.2.
-** Session config
-
-#+BEGIN_SRC conf
-session.path = <PATH>
-#+END_SRC
-+ Specify the session files path. Change according to your session engine.
-
-#+BEGIN_SRC conf
-session.engine = simple | db | file | <third-party-engine>
-#+END_SRC
-+ Specify session engine.
-  + *simple* uses hash table for memcache.
-  + *db* uses RDBMS for storing sessions.
-  + *file* stores session information into text files.
-
-** Upload config
-#+BEGIN_SRC conf
-upload.types = <item-list>
-#+END_SRC
-+ Specify allowed upload file type, say, src_conf[:exports code]{upload.types = jpg,png,gif}.
-  + /*Note:*/ added on Artanis-0.2.
-
-#+BEGIN_SRC conf
-upload.path = <PATH>
-#+END_SRC
-+ The path to put the uploaded files.
-
-#+BEGIN_SRC conf
-upload.size = <interger>
-#+END_SRC
-+ The size limitation of uploaded file in bytes.
-  + /*Note:*/ added on Artanis-0.2
-
-** Cache config
-#+BEGIN_SRC conf
-cache.maxage = <integer>
-#+END_SRC
-+ The maximum age of a cached page in seconds.
-  + This is the global maxage of any cache. If you want to specify maxage for certain page, please read [[Cache][Cache]].
-** Debug config
-#+BEGIN_SRC conf
-debug.enable = <boolean>
-#+END_SRC
-+ Wheather to enable debug mode. If you enable debug mode, Artanis will print debug information verbosely.
-  The module you modified will be reloaded instantly, and the page view will be rendered as well.
-+ /NOTE: This option will affect the performance, please use it for debug purposes only./
-
-#+BEGIN_SRC conf
-debug.monitor = <PATHs>
-#+END_SRC
-+ The paths that needs to be monitored in debug-mode. This will take advantage of `inotify' in GNU/Linux kernel.
-  + /*Note:*/ We may support GNU/Hurd as well, with its file monitor mechanism, in the future.
 ** Config APIs
 To change the default configurations:
 #+BEGIN_SRC scheme
@@ -972,13 +749,43 @@ The query string would be encoded in the HTTP body on the POST method.
 There's only a slight difference when you pass query string by POST instead of with GET:
 you don't need a URL rule using a regex. So, the "?" above would be gone in this example.
 #+begin_src scheme
-(post "/there"
+(post "/there" #:from-post 'qstr
   (lambda (rc)
-    (get-from-qstr rc "name")))
+    (:from-post rc 'get "name")))
 #+end_src
-GNU Artanis will detect the method type in /get-from-qstr/, if it's POST, then the router
-will parse the query strings from the HTTP body automatically.
 
+Please notice that src_scheme[:exports code]{#:from-post 'qstr} is necessary when you're trying to
+get data from POST. And you should use src_scheme[:exports code]{:from-post} to get related data
+from query-string.
+
+#+BEGIN_SRC scheme
+#:from-post <mode>
+#+END_SRC
+
+The mode includes:
+- src_scheme[:exports code]{#t} or src_scheme[:exports code]{'qstr}: handle query-string for you.
+- src_scheme[:exports code]{'json}: returns a parsed json as hashtable.
+- src_scheme[:exports code]{'qstr-safe}: similar to 'qstr, but try to eliminate evil HTML entities first.
+- src_scheme[:exports code]{'bv}: returns the body as bytevector.
+- src_scheme[:exports code]{'store rest ...}: It's for [[Upload files][Upload files]].
+
+The reason to design :from-post is for the efficient purpose.
+Artanis will not try to auto parse POST body as query-string for at least 2
+reasons:
++ 1. It may not be query-string, maybe json, or uploaded file
++ 2. It may be long query-string, and could be deleyed to parse. This is
+useful to avoid redundant parsing. However, each time you call
+src_scheme[:exports code]{:from-post}, it will parse the query-string again, the correct way to
+fetch multiple values is:
+#+BEGIN_SRC scheme
+(:from-post rc 'get-vals "key1" "key2" "key3")
+#+END_SRC
+
+BTW, you may get the parsed query-string as an assoc-list as well:
+#+BEGIN_SRC scheme
+(let ((qstr (:from-post rc 'get)))
+  (assoc-ref qstr "key-1"))
+#+END_SRC
 * Layouts and Rendering in GNU Artanis
 ** Templating
 Templating provides a way to mix programmatic code into HTML.
@@ -1151,6 +958,22 @@ a "," character before the variable name, makes the variable be referred to inst
 of just passing a string.
 
 * Databases
+** DB init hooks
+Sometimes you need to do some configurations before using DB, Artanis provide an API
+for that, you should put it to ENTRY file before run the server.
+
+For example, assuming you're using MySQL/MariaDB, and you need to configure it to UTF-8,
+you should add these lines to you ENTRY file. Or if you're using minimal mode without
+application folder, just put it before running the server.
+
+#+BEGIN_SRC scheme
+(run-when-DB-init!
+ (lambda (conn)
+  (DB-query conn "set names utf8;")))
+#+END_SRC
+
+*NOTE: Don't forget `!' here, it implies the side-effects in Scheme!*
+
 ** DB connection pool
 TODO
 ** Migration
@@ -1246,7 +1069,7 @@ GNU Artanis provides three ways to complete this mission. All of them, are *expe
 + FPRM (4,7)
 
 + SQL Mapping (1,3,6)
-** SSQL (experimental)
+** SSQL
 The concept of SSQL is very easy. Write SQL in [[https://en.wikipedia.org/wiki/S-expression][s-expression]].
 
 Usage:
@@ -1484,7 +1307,18 @@ You can use SXML to replace XML for exchanging data format. This way saves some 
 * Upload files
 If you want to be able to upload files, store-uploaded-files is your friend.
 ** Receive an upload from the client
+The typical configuration of an uploading WebAPI looks like this:
 
+#+BEGIN_SRC scheme
+(post "/upload" #:from-post '(store #:path "upload" #:sync #f)
+ (lambda (rc)
+  (case (:from-post rc 'store)
+   ((success) (response-emit "upload succeeded!"))
+   ((none) (response-emit "No uploaded files!"))
+   (else (response-emit "Impossible! please report bug!")))))
+#+END_SRC
+
+However, you may use the low-level API for more configurations as well:
 #+begin_src scheme
 (store-uploaded-files rc #:path (current-upload-path)
                       #:uid #f
@@ -1554,6 +1388,10 @@ And the APIs of the session is :session
 +  `(check-and-spawn-and-keep ,sid) to check, then spawn, then keep, specifying the sid name.
 +  'spawn to spawn a session with the name "sid".
 +  'spawn-and-keep to spawn a session then keep with the name "sid".
+
+** Session backend
+Artanis provide several backends for implementing sessions in the lower-level. Please take a look
+at the description of src_scheme[:exports code]{session.backend} in your artanis.conf.
 * Cookies
 You can use src_scheme[:exports code]{#:cookies mode} to define a URL rule handler.
 #+begin_src scheme
@@ -1613,14 +1451,39 @@ You can use src_scheme[:exports code]{#:auth mode} to define a URL rule handler.
 
 *mode* can be:
 + SQL as [[String Template][string template]]. You can write your own custom SQL string to fetch & check your username and password.
-+ ('basic (lambda (rc user passwd) ...)) init Basic Authentication mode. /user/ is the username, and /passwd/ is the password.
-+ ('table table-name username-field passwd-field) init a common Authentication mode. *The passwd will be encrypted by the default algorithm*.
-+ ('table table-name username-field passwd-field crypto-proc) similar to the above item, but encrypt passwd with crypto-proc.
-+ (table-name crypto-proc), so the passwd field will be "passwd" and username will be "username" by default.You can encrypt the passwd with crypto-proc.
++ src_scheme[:exports code]{('basic (lambda (rc user passwd) ...))} init Basic Authentication mode. /user/ is the username, and /passwd/ is the password.
++ src_scheme[:exports code]{('table table-name username-field passwd-field)} init a common Authentication mode. *The passwd will be encrypted by the default algorithm*.
++ src_scheme[:exports code]{('table table-name username-field passwd-field crypto-proc)} similar to the above item, but encrypt passwd with crypto-proc.
++ src_scheme[:exports code]{(table-name crypto-proc)}, so the passwd field will be "passwd" and username will be "username" by default.You can encrypt the passwd with crypto-proc.
 
 Available crypto-proc helper functions listed here:
-+ (string->md5 str)
-+ (string->sha-1 str)
+#+BEGIN_SRC scheme
+(string->md5 <string>)
+(string->sha-1 <string>)
+(string->sha-224 <string>)
+(string->sha-256 <string>)
+(string->sha-384 <string>)
+(string->sha-512 <string>)
+#+END_SRC
+
+NOTE: Please make sure that the src_scheme[:exports code]{username-field} and src_scheme[:exports code]{passwd-field} must be the same with
+the field name specifed in the submit form of you web page code.
+
+For example, if there is a form on you page:
+#+BEGIN_SRC html
+<input type="password" name="passwd">
+#+END_SRC
+
+Please notice that name of password input was specified to src_scheme[:exports code]{"passwd"}.
+
+Then you should write authentication like this:
+
+#+BEGIN_SRC scheme
+(post "/auth" #:auth '(table user "user" "passwd") #:session #t
+  (lambda (rc) ...))
+#+END_SRC
+
+Please notice that the src_scheme[:exports code]{"passwd"} here is the same with what you specified in the form.
 ** Basic Authentication
 The HTTP Basic authentication (BA) implementation is the simplest technique for enforcing access control
 to web resources, as it doesn't require cookies, session identifiers, or login pages. But rather uses
@@ -1638,16 +1501,16 @@ Let's see a simple example:
   (and (string=? user "jack") (string=? passwd "123")))
 
 (post "/bauth" #:auth `(basic ,checker)
-  (lambda (rc)
-    (if (:auth rc)
-        "auth ok"
+      (lambda (rc)
+        (if (:auth rc)
+            "auth ok"
             (throw-auth-needed))))
 #+end_src
 
 Another simple way to provide authentication is to compare the passsword stored in a database table:
 #+BEGIN_SRC scheme
 (post "/bauth" #:auth `(basic Person username passwd)
-  (lambda (rc) ... ))
+      (lambda (rc) ... ))
 #+END_SRC
 
 NOTE: Assuming *username* and *passwd* are columns of the Person table.
@@ -1727,7 +1590,7 @@ You can set your own HMAC function, as in this example:
   (string->sha-512 (format #f "~a-~a-~a" passwd salt (current-time))))
 
 (post "/auth" #:auth `(table user "user" "passwd" "salt" ,my-hmac)
- ...... )
+      ...... )
 #+end_src
 
 The default HMAC function is:
@@ -1828,7 +1691,7 @@ at GNU Artanis's start up.
     src_scheme[:exports code]{(rc-conn rc)}.
 + If you pass a second argument, it should be a valid SQL query string.
   The returned value is described in [[DB connection pool][DB connection pool]].
-  + You can create the SQL query string with [[SSQL (experimental)][SSQL]].
+  + You can create the SQL query string with [[SSQL][SSQL]].
 
 ** Raw SQL
 
@@ -1897,8 +1760,6 @@ Websockets are important for GNU Artanis's design. Please see [[Principles][Prin
 
 ** Websocket basic usage
 
-/(Websocket support is still experimental and unfinished. Only the demo works. Please don't use it)/
-
 In GNU Artanis, a Websocket handling is triggered by setting it on a specific URL.
 You should use src_scheme[:exports code]{#:websocket} to configure the Websocket. For example:
 
@@ -1956,6 +1817,51 @@ function WebSocketTest()
     }
 }
 #+END_SRC
+
+** Websocket named-pipe
+Artanis provides the named-pipe based on Websocket, which is very useful to interact between the client and server.
+/NOTE: The Websocket named-pipe is very useful to implement server-push messaging./
+
+Here is the critical API:
+#+BEGIN_SRC scheme
+(named-pipe-subscribe <route-context>)
+#+END_SRC
+
+Let's try a simple example:
+#+BEGIN_SRC scheme
+(get "/robot" #:websocket '(proto echo) named-pipe-subscribe)
+#+END_SRC
+
+Here we register a WebAPI named src_conf[:exports code]{"/robot"}, and configure it a Websocket API by
+src_conf[:exports code]{#:websocket '(proto echo)}. As you may see, we specify its protocol to a simple echo protocal,
+it is to say, it will redirect what it receives. Each time it receives a message, it will redirect the message to the
+specified named-pipe, and the subscriber of that named-pipe will get the message instantly. The name of the pipe is specified
+by the client like this:
+#+BEGIN_SRC js
+var ws = new WebSocket("ws://localhost:3000/robot?artanis_named_pipe=robot-1");
+#+END_SRC
+The query-string src_conf[:exports code]{"artanis_named_pipe"} is a special key in Artanis, you MUST use this key to specify the
+pipe name. Here we specify the pipe name as src_conf[:exports code]{"robot-1"}.
+
+Now we setup the named-pipe, however, we still need to setup another WebAPI to let the client send message:
+#+BEGIN_SRC scheme
+(get "/welcome/:whom/:what" #:websocket 'send-only
+     (lambda (rc)
+       (:websocket rc 'send (params rc "whom") (params rc "what"))
+       "ok"))
+#+END_SRC
+The configure src_conf[:exports code]{"#:websocket 'send-only"} means this API is only for sending, so that it's half-duplex.
+And another critical Websocket API here:
+#+BEGIN_SRC scheme
+(:websocket <route-context> 'send <pipe-name> <data>)
+#+END_SRC
+
+Each time you send data from the WebAPI, for example:
+#+BEGIN_SRC bash
+curl localhost:3000/welcome/robot-1/nala
+#+END_SRC
+In our simple example of [[https://gitlab.com/NalaGinrut/artanis/blob/master/examples/websocket-named-pipe.html][Websocket named-pipe test]], and you should run
+The named-pipe will receive the message src_conf[:exports code]{"nala"}, and the page on the browser will print it instantly.
 
 ** Websocket APIs
 
@@ -2115,6 +2021,35 @@ Artanis instances listening to the same port, to take advantage of multi core CP
 You can use these APIs to customize your own server core.
 
 (to be continued ...)
+* Key-Value Database
+** LPC
+LPC stands for Lightweight Persistent Cache. It's the easiest way to use key-value DB in Artanis.
+
+For example:
+#+BEGIN_SRC scheme
+(get "/certain_rule" #:lpc <backend> (lambda (rc) ...))
+#+END_SRC
+
+The backend includes:
+- src_scheme[:exports code]{#t} or src_scheme[:exports code]{'redis}
+- src_scheme[:exports code]{'json}
+
+After configured, it's easy to use it:
+#+BEGIN_SRC scheme
+;; Setter
+(:lpc rc 'set <key> <val>)
+
+;; Getter
+(:lpc rc 'get <key>)
+;; or
+(:lpc rc 'ref <key>)
+#+END_SRC
+
+In default, the key will be prefixed automatically:
+#+BEGIN_SRC scheme
+(string-append "__artanis_lpc_" (get-conf '(db name)) "_" key)
+#+END_SRC
+
 * Utils
 *The functions listed below require the [[https://gitlab.com/NalaGinrut/artanis/blob/master/artanis/utils.scm][(artanis utils)]] module.*
 ** String Template
