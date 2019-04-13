@@ -2128,6 +2128,150 @@ from rnrs.
 #+end_src
 ** Time operation tool
 TODO
+* Integrate front-end framework
+** React + Typescript
+It is strongly recommended to use Typescript to replace Javascript. 
+And Typescript transpiler is licensed with Apache-2.0 which is compatible with GPL.
+Although Typescript was dismissed because of the size and little slower performance,
+the rubustness should be more important in development.
+
+Here is an example for Hello World.
+
+First, you have to install NPM for Webpack and the Typescript transpiler:
+#+BEGIN_SRC bash
+sudo npm install -g webpack webpack-cli typescript
+#+END_SRC
+
+For example, you have an Artanis application:
+
+#+BEGIN_SRC bash
+art create my-test
+cd my-test
+#+END_SRC
+
+However, the *node_modules* directory can't be put in the toplevel position. 
+You have to initialize your NPM in *pub* directory:
+#+BEGIN_SRC bash
+# In my-test directory
+cd pub
+npm install --save react react-dom @types/react @types/react-dom
+npm install --save-dev typescript awesome-typescript-loader source-map-loader
+mkdir js/ts
+#+END_SRC
+
+Create and edit *tsconfig.json* file under *pub* directory:
+#+BEGIN_SRC json
+{
+    "compilerOptions": {
+        "outDir": "./pub/dist/",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "module": "commonjs",
+        "target": "es6",
+        "jsx": "react"
+    },
+    "include": [
+        "./pub/js/ts/**/*"
+    ]
+}
+#+END_SRC
+
+Create and edit *webpack.config.js* file under *pub* directory:
+#+BEGIN_SRC js
+module.exports = {
+    entry: "./js/ts/index.tsx",
+    output: {
+        filename: "bundle.js",
+        path: __dirname + "/dist"
+    },
+
+    // Enable sourcemaps for debugging webpack's output.
+    devtool: "source-map",
+
+    resolve: {
+        // Add '.ts' and '.tsx' as resolvable extensions.
+        extensions: [".ts", ".tsx", ".js", ".json"]
+    },
+
+    module: {
+        rules: [
+            // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
+            { test: /\.tsx?$/, loader: "awesome-typescript-loader" },
+
+            // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+            { enforce: "pre", test: /\.js$/, loader: "source-map-loader" }
+        ]
+    },
+
+    // When importing a module whose path matches one of the following, just
+    // assume a corresponding global variable exists and use that instead.
+    // This is important because it allows us to avoid bundling all of our
+    // dependencies, which allows browsers to cache those libraries between builds.
+    externals: {
+        "react": "React",
+        "react-dom": "ReactDOM"
+    }
+};
+#+END_SRC
+
+Create *index.html* under *pub* directory:
+#+BEGIN_SRC html
+ <!DOCTYPE html>
+ <html>
+     <head>
+         <meta charset="UTF-8" />
+         <title>Hello React!</title>
+     </head>
+     <body>
+         <div id="example"></div>
+ 
+         <!-- Dependencies -->
+         <script src="./node_modules/react/umd/react.development.js"></script>
+         <script src="./node_modules/react-dom/umd/react-dom.development.js"></script>
+ 
+         <!-- Main -->
+         <script src="./dist/bundle.js"></script>
+     </body>
+ </html>
+#+END_SRC
+
+Create *js/ts/index.tsx* under *pub* directory:
+#+BEGIN_SRC typescript
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+
+import { Hello } from "./components/Hello";
+
+ReactDOM.render(
+        <Hello compiler="TypeScript" framework="React" />,
+    document.getElementById("example")
+);
+#+END_SRC
+
+Create *js/ts/components/Hello.tsx* under *pub* directory:
+#+BEGIN_SRC typescript
+import * as React from "react";
+
+export interface HelloProps {
+    compiler: string;
+    framework: string;
+}
+
+export const Hello = (props: HelloProps) =>
+    <h1>Hello from {props.compiler} and {props.framework}!</h1>;
+#+END_SRC
+
+Now, everything is ready, we run *webpack* to compile Typescript code and pack necessary resources:
+#+BEGIN_SRC bash
+# Must be under "pub" directory
+webpack
+art work
+#+END_SRC
+
+OK, now open *http://localhost:3000/pub/index.html* to see you work.
+
+It's just a Hello World. Feel free to modify it for your cases.
+
 * Debug mode
 GNU Artanis provides a debug-mode for a more convenient way to debug. It's very easy to use.
 
