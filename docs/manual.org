@@ -2137,10 +2137,7 @@ the rubustness should be more important in development.
 
 Here is an example for Hello World.
 
-First, you have to install NPM for Webpack and the Typescript transpiler:
-#+BEGIN_SRC bash
-sudo npm install -g webpack webpack-cli typescript
-#+END_SRC
+We assume that you’re already using Node.js with npm.
 
 For example, you have an Artanis application:
 
@@ -2154,9 +2151,25 @@ You have to initialize your NPM in *pub* directory:
 #+BEGIN_SRC bash
 # In my-test directory
 cd pub
+npm init
+#+END_SRC
+
+You’ll be given a series of prompts, but you can feel free to use the defaults. You can always go back and change these in the package.json file that’s been generated for you.
+If you want to skip those prompts, just type:
+#+BEGIN_SRC bash
+# In *pub* directory
+npm init -y
+#+END_SRC
+
+Let’s now add React and React-DOM, along with their declaration files, as dependencies to your package.json file:
+#+BEGIN_SRC bash
+# In *pub* directory
 npm install --save react react-dom @types/react @types/react-dom
-npm install --save-dev typescript awesome-typescript-loader source-map-loader
-mkdir js/ts
+#+END_SRC
+
+Next, we’ll install Webpack and the Webpack CLI as dev-dependencies, add development-time dependencies on awesome-typescript-loader and source-map-loader.
+#+BEGIN_SRC bash
+npm install --save-dev webpack webpack-cli typescript awesome-typescript-loader source-map-loader
 #+END_SRC
 
 Create and edit *tsconfig.json* file under *pub* directory:
@@ -2172,13 +2185,16 @@ Create and edit *tsconfig.json* file under *pub* directory:
     },
     "include": [
         "./pub/js/ts/**/*"
-    ]
+    ],
+    "exclude": ["node_modules"]
 }
 #+END_SRC
 
 Create and edit *webpack.config.js* file under *pub* directory:
 #+BEGIN_SRC js
 module.exports = {
+    mode: 'production',
+    watch: true,
     entry: "./js/ts/index.tsx",
     output: {
         filename: "bundle.js",
@@ -2261,10 +2277,24 @@ export const Hello = (props: HelloProps) =>
     <h1>Hello from {props.compiler} and {props.framework}!</h1>;
 #+END_SRC
 
+Webpack 4 has two modes: development and production. The bundle will be minimized on production mode only.
+Let’s add two npm scripts to our package.json to run Webpack:
+#+BEGIN_SRC json
+"scripts": {
+    "start": "webpack --mode development",
+    "build": "webpack --mode production"
+  },
+#+END_SRC
+
 Now, everything is ready, we run *webpack* to compile Typescript code and pack necessary resources:
 #+BEGIN_SRC bash
 # Must be under "pub" directory
-webpack
+npm run build
+#+END_SRC
+So webpack is watching your code, anytime you change the code, webpack will automatically update it.
+
+Then, under project folders, open a new terminal, and type:
+#+BEGIN_SRC bash
 art work
 #+END_SRC
 
