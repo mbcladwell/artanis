@@ -847,6 +847,17 @@ controller name automatically.
 If you don't use the MVC, and are rather writing all in one script
 file loading GNU Artanis modules. Then you don't need to follow this rule.
 
+*NOTE:* Don't wrap code in double-quotes, for example:
+#+BEGIN_SRC html
+<a href="<%= my-url %>">click me</a> <!-- Wrong! -->
+<a href=<%= my-url %> >click me</a> <!-- Correct! -->
+#+END_SRC
+
+If you need to output a double-quoted string, please use src_scheme[:exports code]{object->string} to convert in Scheme first.
+#+BEGIN_SRC html
+<a href=<%= (object->string my-url) %> >click me</a> <!-- If my-url is not properly quoted -->
+#+END_SRC
+
 #+begin_src scheme
 (get "/test"
   (lambda (rc)
@@ -1539,7 +1550,7 @@ If you save the account data in a database table, then you can use the table mod
 #:auth `(table ,table-name [,username-field] [,passwd-field] [,salt-field] [,hmac])
 #+END_SRC
 
-NOTE: The square-bracked *[args]* above are optional.
+NOTE: The square-braced *[args]* above are optional.
 
 The default values for the optional items are:
 + username-field: username
@@ -1557,7 +1568,7 @@ salt field name in the salt-field argument.
 
 For hmac item, please see [[HMAC][HMAC]].
 
-** Login authentication
+** Login Authentication
 Usually, when doing a login, you will need both src_scheme[:exports code]{#:auth} and src_scheme[:exports code]{#:session} options for a long time session.
 The first step is to authenticate, if it's successful, then spawn a new session for this request.
 
@@ -1575,6 +1586,35 @@ Here is a simple example:
 #+end_src
 
 *NOTE: The passwd will be encrypted by the default algorithm.*
+
+** Authenticate checking
+If certain page requires authencation first, then how to check it properly?
+
+In GNU Artanis, the *session-id* is the only token to check if the client has already been authenticated.
+You may use src_scheme[:exports code]{#:with-auth} to do all the works automatically for you.
+
+#+BEGIN_SRC scheme
+(get "/dashboard"
+  #:with-auth options
+  (lambda (rc)
+    (view-render "dashboard" (the-environment))))
+#+END_SRC
+
+For example, assume you have a page */dashboard* requires login, then you may set src_scheme[:exports code]{#:with-auth} with
+certain option. We will explain this option later. Each time user visit */dashboard* page, GNU Artanis will check if there's
+valid *session-id* from client's cookies, if yes, then run the handler to generate the response; if no, then jump to the related
+auth failed handler, depends on the option you specified.
+
+Here's available *options*:
++ src_scheme[:exports code]{#t} means the default failure activity: redirect to */login* page.
++ URL in string, specify the login page URL. For example, src_scheme[:exports code]{#:with-auth "/admin/login"}.
++ src_scheme[:exports code]{'status} will return a 401 page with status code 401, which could be checked by cilent.
++ *Thunk* can be used to generate customized response by users. A thunk is a function without parameter.
+  For example, src_scheme[:exports code]{#:with-auth (lambda () (scm->json-string '((status . 401) (reason . "No auth"))))}.
+  This is useful to customize your protocol in JSON for RESTful API.
+
+*NOTE:* Different from other shortcuts, there's no src_scheme[:exports code]{:with-auth} for user customized purpose inside the handler.
+All related works are handled by GNU Artanis.
 
 ** HMAC
 [[https://en.wikipedia.org/wiki/HMAC][HMAC]] is a hash-based message authentication code.
@@ -1860,8 +1900,9 @@ Each time you send data from the WebAPI, for example:
 #+BEGIN_SRC bash
 curl localhost:3000/welcome/robot-1/nala
 #+END_SRC
-In our simple example of [[https://gitlab.com/NalaGinrut/artanis/blob/master/examples/websocket-named-pipe.html][Websocket named-pipe test]], and you should run
-The named-pipe will receive the message src_conf[:exports code]{"nala"}, and the page on the browser will print it instantly.
+In our simple example of [[https://gitlab.com/NalaGinrut/artanis/blob/master/examples/websocket-named-pipe.html][Websocket named-pipe test]], you should run
+The named-pipe will receive the message src_scheme[:exports code]{"nala"},
+and the page on the browser will print src_scheme[:exports code]{"hello welcome...nala"} instantly.
 
 ** Websocket APIs
 
@@ -2130,7 +2171,7 @@ from rnrs.
 TODO
 * Integrate front-end framework
 ** React + Typescript
-It is strongly recommended to use Typescript to replace Javascript. 
+It is strongly recommended to use Typescript to replace Javascript.
 And Typescript transpiler is licensed with Apache-2.0 which is compatible with GPL.
 Although Typescript was dismissed because of the size and little slower performance,
 the rubustness should be more important in development.
@@ -2146,7 +2187,7 @@ art create my-test
 cd my-test
 #+END_SRC
 
-However, the *node_modules* directory can't be put in the toplevel position. 
+However, the *node_modules* directory can't be put in the toplevel position.
 You have to initialize your NPM in *pub* directory:
 #+BEGIN_SRC bash
 # In my-test directory
@@ -2232,23 +2273,23 @@ module.exports = {
 
 Create *index.html* under *pub* directory:
 #+BEGIN_SRC html
- <!DOCTYPE html>
- <html>
-     <head>
-         <meta charset="UTF-8" />
-         <title>Hello React!</title>
-     </head>
-     <body>
-         <div id="example"></div>
- 
-         <!-- Dependencies -->
-         <script src="./node_modules/react/umd/react.development.js"></script>
-         <script src="./node_modules/react-dom/umd/react-dom.development.js"></script>
- 
-         <!-- Main -->
-         <script src="./dist/bundle.js"></script>
-     </body>
- </html>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello React!</title>
+  </head>
+  <body>
+    <div id="example"></div>
+
+    <!-- Dependencies -->
+    <script src="./node_modules/react/umd/react.development.js"></script>
+    <script src="./node_modules/react-dom/umd/react-dom.development.js"></script>
+
+    <!-- Main -->
+    <script src="./dist/bundle.js"></script>
+  </body>
+</html>
 #+END_SRC
 
 Create *js/ts/index.tsx* under *pub* directory:
