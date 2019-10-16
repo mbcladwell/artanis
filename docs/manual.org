@@ -519,18 +519,28 @@ Options:
                                    Default: disable
   -s, [--server=SERVER]          # Specify server core
                                    Default: Ragnarok (New server core since 0.2)
+  --refresh                      # Clean caches, and force to re-compile all source code.                                                         
   --help                         # Show this screen
 #+end_src
 
-+ For server core alternatives, please see [[Server config][Server config]].
-+ For Database (DBD) alternatives, please see [[Database config][Database config]].
++ For server core alternatives, please see src_config[:exports code]{server.config} in config.
++ For Database (DBD) alternatives, please see src_config[:exports code]{database.config} in config.
 
+*NOTE:* Please make sure use src_bash[:exports code]{art work --refresh} to recompile WebApp code each time you upgrade GNU Artanis.
+And if you want to clean the caches for debug, src_bash[:exports code]{--refresh} is also your friend.
 * URL remapping
 ** Introduction to URL remapping
 URL remapping is used to modify a web URL's appearance to provide short, pretty or fancy, search engine friendly URLs.
 It's largely used in modern WAFs(web application framework) to provide RESTful web APIs.
 ** URL handling
-According to RFC2616, there are GET, POST, PUT, PATCH and DELETE methods. You may write a handler for any type.
+According to RFC2616, the methods include GET, POST, etc. However, because of the naming conflict, GNU Artanis provides
+the methods by this list:
+- get
+- post
+- put
+- patch
+- page-delete
+- page-options
 
 /In GNU Artanis the HEAD method is handled by the server, so you can't define specific handlers directly for it within GNU Artanis./
 
@@ -554,7 +564,7 @@ And the handler could be one of two types, depending on your needs:
 
 + 1. literal string as the returned response body
 
-+ 2. See [[Emit Response][Emit Response]]
++ 2. See [[Emit a Response][Emit a Response]]
 
 #+begin_src scheme
 (get "/hello" (lambda () "hello world"))
@@ -564,6 +574,13 @@ For a POST method:
 #+begin_src scheme
 (post "/auth" (lambda (rc) ...))
 #+end_src
+** OPTIONS method
+OPTIONS method is used to return the other methods supported by the server-side at the given URL.
+By default in GNU Artanis, for a specified URL, every method whose handler was registerted would be added to its own OPTIONS list.
+
+If you want to deny certain methods for security consideration, you may need to set *server.allowedmethods* in config.
+
+*NOTE:* If you're not trying to use Cross-Origin Resource Sharing (CORS), then you may not need to care about it.
 ** Get parameters from a URL
 #+begin_src scheme
 (params rc name)
@@ -572,12 +589,19 @@ For a POST method:
 #+end_src
 ** Redirecting
 #+begin_src scheme
-(redirect-to rc path #:status 301
-             #:scheme 'http)
+(redirect-to rc path #:status 301 #:type '(text/html) #:headers '())
 ;; e.g
 (get "/aaa" (lambda (rc) (redirect-to rc "/bbb")))
 (get "/bbb" (lambda () "ok bbb"))
 #+end_src
+
+The *path* could be 2 possible patterns:
+- URI created by [[https://www.gnu.org/software/guile/manual/html_node/URIs.html][string->uri]]. For example, src_scheme[:exports code]{(redirect-to rc (string->uri "https://nalaginrut.com/feed/atom"))}.
+- A relative path which will finally be converted to absolute URL append the *host.addr*.
+  For example, src_scheme[:exports code]{(redirect-to rc "/login")}.
+ 
+*NOTE:* redirect-to will always use absolute URL implicitly. Although the standard supports relative URL,
+there maybe some problems when you're behind a proxy. So we use absolute URL to avoid these issues.
 * Route context
 Route context is a struct type object which encapsulates the necessary information for the server from the current request context.
 We named it /route/ because it's related to the route of [[URL remapping][URL remapping]].
@@ -663,6 +687,42 @@ Usually it's passed to the page handler as a unique argument. It's supposed to p
 
 There're other APIs in /route-context/, but they're largely used for
 internals of Artanis, rarely useful for users. So we don't list them here.
+* Page status handling
+** HTTP status code 
+HTTP response status codes are the error numbers show the status of a specific HTTP request. The responses are grouped in five classes:
+- Informational responses (100–199)
+- Successful responses (200–299)
+- Redirects (300–399)
+- Client errors (400–499)
+- Server errors (500–599)
+** The default behaviour of status handling
+On success, GNU Artanis returns the status code 200.
+
+If there's any issue prevents GNU Artanis to generate requested result successfully, then it'll throw the relavent exception somewhere issue
+happened. And finally it will be caught by the server-core. In theory, the status code other than 200 will trigger a system page generating
+operation. By default, status pages are put in */etc/artanis/pages*, but you may override it in *your_app_folder/sys/pages*. Each system page
+named with the status code, say, *404.html*. So you may easily customize your preferred status page.
+** Dynamic status page generating 
+Sometimes you may need more complex status page generating. For example, you want to put a random public service advertising when the visitors
+encountered a 404 (page missing). Then you can do it like this:
+#+BEGIN_SRC scheme
+(http-status status-code thunk-handler)
+#+END_SRC
+- *status-code* must be an integer between 100~599.
+- *Thunk* implies a function without any argument.
+Let's see an example:
+
+#+BEGIN_SRC scheme
+;; You may put this code in any controller module.
+(http-status 404
+ (lambda ()
+   (view-render "psd_404" (the-environment))))
+#+END_SRC
+
+In this example, "psd" stands for public-service-advertising, and "psd_404" tells the *view-render* to find "psd_404.html" in
+*your_app_folder/sys/pages/psd_404.html*. So you can render the HTML template to generate a status page. Of course, there're a few ways to
+implement the similar idea. If you don't want to render template on the backend, you may generate a JSON and let the frontend framework to
+generate it.
 * MVC
 MVC is Model-View-Controller, the most classic architectural pattern for implementing
 user interfaces.
@@ -709,6 +769,9 @@ For the /controller/ component, you get a /show/ method handler, as:
 Of course, you're free to use or not use these templates. If you want to use the /view template/, just
 uncomment the last line src_scheme[:exports code]{(view-render "show")}.
 
+*NOTE:* The views template generated by MVC will defaultly announce FreeJS. The reason was well explained in [[ http://www.gnu.org/philosophy/javascript-trap.en.html][The Javascript Trap]].
+It's optional, you may remove it with your free will, but I put it there in the hope that you can support free software with us.
+
 For more detail about template in Views, please see [[Layouts and Rendering in GNU Artanis][Layouts and Rendering in GNU Artanis]].
 ** Models
 Models contains operations of database.
@@ -747,7 +810,7 @@ Or it will throw 404 since URL-remapping failed to hit the rule with the query s
 The query string would be encoded in the HTTP body on the POST method.
 
 There's only a slight difference when you pass query string by POST instead of with GET:
-you don't need a URL rule using a regex. So, the "?" above would be gone in this example.
+you don't need a URL rule using a regex, so the "?" is unnecessary here.
 #+begin_src scheme
 (post "/there" #:from-post 'qstr
       (lambda (rc)
@@ -779,6 +842,14 @@ src_scheme[:exports code]{:from-post}, it will parse the query-string again, the
 fetch multiple values is:
 #+BEGIN_SRC scheme
 (:from-post rc 'get-vals "key1" "key2" "key3")
+
+;; For example:
+;; let-values is imported from srfi-11
+(let-values (((title sub-title old-passwd new-passwd)
+              (:from-post rc 'get-vals "title" "sub-title"
+                          "old-passwd" "new-passwd")))
+  ..........
+  )
 #+END_SRC
 
 BTW, you may get the parsed query-string as an assoc-list as well:
@@ -1399,6 +1470,8 @@ And the APIs of the session is :session
 +  `(check-and-spawn-and-keep ,sid) to check, then spawn, then keep, specifying the sid name.
 +  'spawn to spawn a session with the name "sid".
 +  'spawn-and-keep to spawn a session then keep with the name "sid".
++  'drop to remove the current session by "sid".
++  `(drop ,sid) to remove the session by the specifed sid.
 
 ** Session backend
 Artanis provide several backends for implementing sessions in the lower-level. Please take a look
@@ -1562,7 +1635,7 @@ And specify whether "optional" means that can be skipped or set to #f to use the
 
 *GNU Artanis requires a salted password, it's not optional.*
 
-So please prepare a field in a table for the salt string. It's your duty to generate a
+So please prepare a field in a table for the salt string. It's your responsibility to generate a
 salt string, please see [[Random String Generator][Random String Generator]]. When authenticating, please specify the
 salt field name in the salt-field argument.
 
@@ -1575,14 +1648,16 @@ The first step is to authenticate, if it's successful, then spawn a new session 
 Here is a simple example:
 
 #+begin_src scheme
-(post "/auth" #:auth '(table user "user" "passwd") #:session #t
-      (lambda (rc)
-        (cond
-         ((:session rc 'check) "auth ok (session)")
-         ((:auth rc)
-          (:session rc 'spawn)
-          "auth ok")
-         (else (redirect-to rc "/login?login_failed=true")))))
+(post "/auth"
+ #:auth '(table user "user" "passwd")
+ #:session #t
+ (lambda (rc)
+   (cond
+    ((:session rc 'check) "auth ok (session)")
+    ((:auth rc)
+     (:session rc 'spawn)
+     "auth ok")
+    (else (redirect-to rc "/login?login_failed=true")))))
 #+end_src
 
 *NOTE: The passwd will be encrypted by the default algorithm.*
@@ -1591,16 +1666,17 @@ Here is a simple example:
 If certain page requires authencation first, then how to check it properly?
 
 In GNU Artanis, the *session-id* is the only token to check if the client has already been authenticated.
+By default, the *session-id* is named as *SID* in cookies.
 You may use src_scheme[:exports code]{#:with-auth} to do all the works automatically for you.
 
 #+BEGIN_SRC scheme
 (get "/dashboard"
-  #:with-auth options
+  #:with-auth <options>
   (lambda (rc)
     (view-render "dashboard" (the-environment))))
 #+END_SRC
 
-For example, assume you have a page */dashboard* requires login, then you may set src_scheme[:exports code]{#:with-auth} with
+For example, assuming you have a page */dashboard* requires login, then you may set src_scheme[:exports code]{#:with-auth} with
 certain option. We will explain this option later. Each time user visit */dashboard* page, GNU Artanis will check if there's
 valid *session-id* from client's cookies, if yes, then run the handler to generate the response; if no, then jump to the related
 auth failed handler, depends on the option you specified.
@@ -1613,9 +1689,18 @@ Here's available *options*:
   For example, src_scheme[:exports code]{#:with-auth (lambda () (scm->json-string '((status . 401) (reason . "No auth"))))}.
   This is useful to customize your protocol in JSON for RESTful API.
 
-*NOTE:* Different from other shortcuts, there's no src_scheme[:exports code]{:with-auth} for user customized purpose inside the handler.
-All related works are handled by GNU Artanis.
+*NOTE:* Different from other [[Shortcuts][shortcuts]], there's no src_scheme[:exports code]{:with-auth} *apply* for user customized operations
+inside the handler. If you use src_scheme[:exports code]{#:with-auth}, then all related works are handled by GNU Artanis.
 
+** Customized Authentication
+#+BEGIN_SRC scheme
+;; (define (checker username passwd) ...)
+#:auth `(post ,username ,passwd ,checker)
+#+END_SRC
+This mode will parse and return *username* and *password* by the specified field name in query-string.
+What matters here is that you can write your own checker for customization. 
+** Websocket Authentication
+See [[Websocket authentication][Websocket authencation]]
 ** HMAC
 [[https://en.wikipedia.org/wiki/HMAC][HMAC]] is a hash-based message authentication code.
 It's dangerous to store the passwd in a raw string.
@@ -1689,7 +1774,7 @@ But, if your current URL rule is used for authentication (once you use src_schem
 
 * Shortcuts
 ** What is shortcuts?
-/shortcuts/ are a series of special functions. They're used to simplify complex
+/shortcuts/ are a series of special functions. They're used to simplify the complex
 operations, according to the configuration specified by the related keyword, set
 after a URL-rule.
 
@@ -1698,7 +1783,7 @@ principle to be implemented. But it was too hard to remember. So let's just call
 
 Anyway, you may find them in the module [[https://gitlab.com/NalaGinrut/artanis/blob/master/artanis/oht.scm][(artanis oht)]].
 
-It's good practice to use /shortcuts/ as much as possible and avoid calling low-level APIs.
+It's good practice to use /shortcuts/ as possible and avoid calling low-level APIs.
 
 Each shortcut consists of 2 parts: *config* and *apply*.
 
@@ -1792,6 +1877,8 @@ the next version if you wish to use it.
   + /name/ should be an object of the symbol type.
   + /sql-template/ is described in more detail in [[SQL Mapping (experimental)][SQL-Mapping]].
 
+** Authentication
+See [[Authentication][Authentication]].
 * Websocket (Experimental)
 ** Websocket introduction
 Websockets are becoming more and more important for modern web development.
@@ -1801,8 +1888,19 @@ Websockets are important for GNU Artanis's design. Please see [[Principles][Prin
 ** Websocket basic usage
 
 In GNU Artanis, a Websocket handling is triggered by setting it on a specific URL.
-You should use src_scheme[:exports code]{#:websocket} to configure the Websocket. For example:
+You should use src_scheme[:exports code]{#:websocket} to configure the Websocket.
+Here's the API definition:
+#+BEGIN_SRC scheme
+#:websocket (proto protocol-name ['inexclusive])
+#+END_SRC
+*'inexclusive* is optional. By default, each Websocket connection only servs one client.
+However, sometimes we do need to multicast the messages to several clients. Enable *'inexclusive* is the
+easiest way, but it may cause the similar issue to file-description-leaking. There're two suggestions:
+- Set and check security token to prevent malicious programs establish massive connections.
+- If you want to do muticasting as in pub/sub, then use different token or named-pipe to subscribe. And maintain
+  a subscribers table for multicasting.
 
+Here's a simple example for common cases:
 #+BEGIN_SRC scheme
 (use-modules (artanis artanis))
 
@@ -2021,6 +2119,8 @@ the receiving endpoint's WebSocket connection will fail.
 (is-reserved-frame? opcode)
 
 #+END_SRC
+** Websocket authentication
+The Websocket authentication hasn't been unsupported yet.
 * Ragnarok server core
 ** Introduction
 Since version 0.2, GNU Artanis has started to use a strong server core for high concurrency.
@@ -2174,7 +2274,7 @@ TODO
 It is strongly recommended to use Typescript to replace Javascript.
 And Typescript transpiler is licensed with Apache-2.0 which is compatible with GPL.
 Although Typescript was dismissed because of the size and little slower performance,
-the rubustness should be more important in development.
+the rubustness should be more important in the development.
 
 Here is an example for Hello World.
 
@@ -2339,7 +2439,7 @@ Then, under project folders, open a new terminal, and type:
 art work
 #+END_SRC
 
-OK, now open *http://localhost:3000/pub/index.html* to see you work.
+OK, now open *http://localhost:3000/pub/index.html* to see your work.
 
 It's just a Hello World. Feel free to modify it for your cases.
 
