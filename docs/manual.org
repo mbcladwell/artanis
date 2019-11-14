@@ -1584,7 +1584,7 @@ Let's see a simple example:
 (define (my-checker rc user passwd)
   (and (string=? user "jack") (string=? passwd "123")))
 
-(post "/bauth" #:auth `(basic ,checker)
+(post "/bauth" #:auth `(basic ,my-checker)
       (lambda (rc)
         (if (:auth rc)
             "auth ok"
