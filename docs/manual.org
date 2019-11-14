@@ -1331,7 +1331,7 @@ You can use the #:mime method to handle JSON:
 #+begin_src scheme
 (get "/json" #:mime 'json
      (lambda (rc)
-       (let ((j (json (object ("name" "nala") ("age" 15)))))
+       (let ((j (scm->json-string '(("name" . "nala") ("age" . 15)))))
          (:mime rc j))))
 #+end_src
 
