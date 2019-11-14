@@ -1338,12 +1338,11 @@ You can use the #:mime method to handle JSON:
 For example:
 #+begin_src scheme
 (define my-json
-  (json (object ("name" "nala") ("age" 15)
-                ("read_list"
-                 (object
-                  ("book1" "The interpreter and structure of Artanis")
-                  ("book2" "The art of Artanis programming"))))))
-(scm->json my-json) ; scm->json will print a json object
+  '((name . nala) (age . 15)
+    (read_list
+     ("book1" "The interpreter and structure of Artanis")
+     ("book2" "The art of Artanis programming"))))
+(scm->json-string my-json) ; scm->json will print a json string
 ;; ==> {"name" : "nala",
 ;;      "age" : 15,
 ;;      "read_list" : {"book2" : "The art of Artanis programming",
