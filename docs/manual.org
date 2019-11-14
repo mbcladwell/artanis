@@ -1349,7 +1349,7 @@ For example:
 ;;                     "book1" : "The interpreter and structure of Artanis"}}
 #+end_src
 
-src_scheme[:exports code]{scm->json} will print the result directly.
+src_scheme[:exports code]{scm->json} will return a hash-table to represent a JSON object.
 
 If you need to format JSON as a string to return to the client, please use src_scheme[:exports code]{scm->json-string}.
 ** CSV
