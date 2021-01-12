@@ -78,7 +78,7 @@ I would NOT recommend you trying to compile/install Guile from Git repo, since i
 wget -c https://github.com/opencog/guile-dbi/archive/guile-dbi-2.1.7.tar.gz
 
 tar xvzf guile-dbi-2.1.7.tar.gz
-cd guile-dbi-guile-dbi-2.1.7/guile-dbi && ./configure && make
+cd guile-dbi-guile-dbi-2.1.7/guile-dbi && ./autogen.sh --no-configure && ./configure && make
 sudo make install
 #+end_src
 
@@ -86,7 +86,7 @@ sudo make install
 #+begin_src null
 
 tar xvzf guile-dbd-mysql-2.1.6.tar.gz
-cd guile-dbi-guile-dbi-2.1.7/guile-dbd-mysql && ./configure && make
+cd guile-dbi-guile-dbi-2.1.7/guile-dbd-mysql && ./autogen.sh --no-configure && ./configure && make
 sudo make install
 #+end_src
 MySQL is used for the examples in this manual. You may find dbd plugins for other databases [[http://download.gna.org/guile-dbi][here]] or at this
@@ -97,7 +97,7 @@ MySQL is used for the examples in this manual. You may find dbd plugins for othe
 #+begin_src null
 wget -c http://ftp.gnu.org/gnu/artanis/artanis-latest.tar.bz2
 tar xvjf artanis-latest.tar.bz2
-cd artanis-latest && ./configure && make
+cd artanis-latest && ./autogen.sh --no-configure && ./configure && make
 sudo make install
 #+end_src
 
