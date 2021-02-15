@@ -55,17 +55,23 @@ This manual is published under the terms of the [[http://www.gnu.org/copyleft/fd
 *You must be aware there is no warranty whatsoever for GNU Artanis. This is described in full in the
 This is described in full in the licenses.*
 * Installation
-** For users
+** For Guix users
+GNU Guix is the advanced functional & transactional package manager, we recommend you to try it.
+You may read the [[https://guix.gnu.org/manual/en/html_node/Installation.html][GNU Guix installation]] .
+#+begin_src null
+guix install artanis
+#+end_src
 
-*Install GNU Guile-2.2.2 or higher version:*
+** For hardcore users
 
-Since GNU Artanis-0.2, the GNU Guile-2.2+ is required because of the [[https://www.gnu.org/software/guile/manual/html_node/Non_002dBlocking-I_002fO.html][suspendable-ports]], which is the key to implement asynchronous
-non-blocking server core in GNU Artanis.
+*Install GNU Guile-3.0.5 or higher version:*
+
+Since GNU Artanis-0.5, the GNU Guile-3+ is required.
 
 #+begin_src null
-wget -c ftp://ftp.gnu.org/gnu/guile/guile-2.2.2.tar.xz
-tar xvf guile-2.2.2.tar.xz
-cd guile-2.2.2 && ./configure && make #(NOTE: this may take very long time even looks like halting)
+wget -c ftp://ftp.gnu.org/gnu/guile/guile-3.0.5.tar.xz
+tar xvf guile-3.0.5.tar.xz
+cd guile-3.0.5 && ./configure && make #(NOTE: this may take very long time even looks like halting)
 sudo make install
 #+end_src
 
@@ -496,7 +502,7 @@ Options:
   -c, [--create]   # Create WebAPI
 
 Example:
-  art api -c  
+  art api -c
   art api -c -v v3
 #+END_SRC
 Please see [[RESTful API][RESTful API]] for more details.
@@ -542,7 +548,7 @@ Options:
                                    Default: disable
   -s, [--server=SERVER]          # Specify server core
                                    Default: Ragnarok (New server core since 0.2)
-  --refresh                      # Clean caches, and force to re-compile all source code.                                                         
+  --refresh                      # Clean caches, and force to re-compile all source code.
   --help                         # Show this screen
 #+end_src
 
@@ -622,7 +628,7 @@ The *path* could be 2 possible patterns:
 - URI created by [[https://www.gnu.org/software/guile/manual/html_node/URIs.html][string->uri]]. For example, src_scheme[:exports code]{(redirect-to rc (string->uri "https://nalaginrut.com/feed/atom"))}.
 - A relative path which will finally be converted to absolute URL append the *host.addr*.
   For example, src_scheme[:exports code]{(redirect-to rc "/login")}.
- 
+
 *NOTE:* redirect-to will always use absolute URL implicitly. Although the standard supports relative URL,
 there maybe some problems when you're behind a proxy. So we use absolute URL to avoid these issues.
 * Route context
@@ -711,7 +717,7 @@ Usually it's passed to the page handler as a unique argument. It's supposed to p
 There're other APIs in /route-context/, but they're largely used for
 internals of Artanis, rarely useful for users. So we don't list them here.
 * Page status handling
-** HTTP status code 
+** HTTP status code
 HTTP response status codes are the error numbers show the status of a specific HTTP request. The responses are grouped in five classes:
 - Informational responses (100–199)
 - Successful responses (200–299)
@@ -725,7 +731,7 @@ If there's any issue prevents GNU Artanis to generate requested result successfu
 happened. And finally it will be caught by the server-core. In theory, the status code other than 200 will trigger a system page generating
 operation. By default, status pages are put in */etc/artanis/pages*, but you may override it in *your_app_folder/sys/pages*. Each system page
 named with the status code, say, *404.html*. So you may easily customize your preferred status page.
-** Dynamic status page generating 
+** Dynamic status page generating
 Sometimes you may need more complex status page generating. For example, you want to put a random public service advertising when the visitors
 encountered a 404 (page missing). Then you can do it like this:
 #+BEGIN_SRC scheme
@@ -1014,7 +1020,7 @@ To refer to a CSS file:
 #+END_SRC
 This will be expanded like this:
 #+BEGIN_SRC html
-<link rel="stylesheet" href="/pub/css/filename.css">
+<link rel="stylesheet" href="/css/filename.css">
 #+END_SRC
 
 To refer to a JS (javascript) file in the HTML head:
@@ -1023,7 +1029,7 @@ To refer to a JS (javascript) file in the HTML head:
 #+END_SRC
 This will be expanded like this:
 #+BEGIN_SRC html
-<script type="text/javascript" src="/pub/js/filename.js"> </script>
+<script type="text/javascript" src="/js/filename.js"> </script>
 #+END_SRC
 
 To specify an icon for the domain:
@@ -1032,7 +1038,7 @@ To specify an icon for the domain:
 #+END_SRC
 This will be expanded like this:
 #+BEGIN_SRC html
-<link rel="icon" href="/pub/img/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/img/favicon.ico" type="image/x-icon">
 #+END_SRC
 
 ** SXML Templates
@@ -1380,7 +1386,7 @@ src_scheme[:exports code]{api-define} is an overloaded method of the controller 
 
 (api-define article/list
   (options #:mime 'json #:with-auth auth-err)
-  (lambda (rc) ...)) 
+  (lambda (rc) ...))
 #+END_SRC
 Although the registered URL is src_scheme[:exports code]{"article/list"}, the actual API would be src_scheme[:exports code]{"v1/article/list"}, depends on the specified API version.
 * MIME
@@ -1547,8 +1553,12 @@ You can use src_scheme[:exports code]{#:cookies mode} to define a URL rule handl
 #+end_src
 
 *mode* can be:
-+ ('names names ...) to specify the list name for the cookies.
++ ('names names ...) to create cookie objects with specified names.
 + ('custom (names ...) maker setter getter modifier) to specify a more complicated customized cookie handler.
+
+Cookie object is used to create/modify the cookie that will return to the client automatically. This is the instance of a cookie which can be controlled in server-side.
+
+If you want to get the cookie from the client, you should use src_scheme[:exports code]{:cookies-copy}.
 
 And the APIs:
 #+begin_src scheme
@@ -1560,11 +1570,8 @@ And the APIs:
                    #:path #f #:secure #f #:http-only #f)
 
 (:cookies-remove! rc key) ; remove cookie from client
-
-(:cookies-update! rc) ; cookie operations won't work unless you update it
+(:cookies-copy rc name) ; get cookie from the client
 #+end_src
-
-*NOTE*: You don't have to call src_scheme[:exports code]{:cookies-update!} yourself, since it will be called automatically by the hook before the response.
 
 For example:
 #+begin_src scheme
@@ -1575,10 +1582,14 @@ For example:
 
 (get "/cookie/:expires" #:cookies '(names cc)
      (lambda (rc)
-       (:cookies-set! rc 'cc "sid" "123321")
+       ;; link the cookie object with actual cookie
+       (:cookies-set! rc 'cc "sid" (:cookies-value rc "sid"))
        (:cookies-setattr! rc 'cc #:expir (string->number (params rc "expires")))
        "ok"))
 #+end_src
+
+You should link the actual cookie "sid" to the created cookie 'cc, then you can control it. Otherwise it doesn't work.
+
 
 You can use these commands in your console to see the results:
 #+begin_src nil
@@ -1761,7 +1772,7 @@ inside the handler. If you use src_scheme[:exports code]{#:with-auth}, then all 
 #:auth `(post ,username ,passwd ,checker)
 #+END_SRC
 This mode will parse and return *username* and *password* by the specified field name in query-string.
-What matters here is that you can write your own checker for customization. 
+What matters here is that you can write your own checker for customization.
 ** Websocket Authentication
 See [[Websocket authentication][Websocket authencation]]
 ** HMAC
@@ -1821,7 +1832,7 @@ Let's set a simple cache setting for dynamic content:
 
 If you want to cache a static file, and permit proxies cache the content:
 #+begin_src scheme
-(get "/hide" #:cache '(public "pub/some.html")
+(get "/hide" #:cache '(public "/some.html")
      (lambda (rc)
        (:cache rc)))
 #+end_src
@@ -1831,7 +1842,7 @@ But, if your current URL rule is used for authentication (once you use src_schem
 (get "/pauth"
   #:auth `(basic ,(lambda (rc u p) (and (string=? u "nala")
                                         (string=? p "123"))))
-  #:cache '(public "pub/some.html") ; will be changed to 'private' forcely.
+  #:cache '(public "/some.html") ; will be changed to 'private' forcely.
   (lambda (rc) (:cache rc)))
 #+end_src
 
@@ -2502,7 +2513,7 @@ Then, under project folders, open a new terminal, and type:
 art work
 #+END_SRC
 
-OK, now open *http://localhost:3000/pub/index.html* to see your work.
+OK, now open *http://localhost:3000/index.html* to see your work.
 
 It's just a Hello World. Feel free to modify it for your cases.
 
