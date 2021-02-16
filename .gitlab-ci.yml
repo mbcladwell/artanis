@@ -5,8 +5,6 @@ services:
 
 docker:
   stage: production
-  variables:
-    DOCKER_HOST: tcp://localhost:2375
   script:
    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
    - docker build -t register.gitlab.com/nalaginrut/artanis:latest .
