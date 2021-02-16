@@ -1,10 +1,17 @@
-image: docker:latest
+image: docker:stable
 
 services:
  - docker:dind
 
 docker:
   stage: production
+  entrypoint: ["env", "-u", "DOCKER_HOST"]
+  command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    # See https://github.com/docker-library/docker/pull/166
+    DOCKER_TLS_CERTDIR: ""
   script:
    - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
    - docker build -t register.gitlab.com/nalaginrut/artanis:latest .
