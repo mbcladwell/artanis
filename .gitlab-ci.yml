@@ -12,13 +12,13 @@ variables:
     DOCKER_TLS_CERTDIR: ""
 
 before_script:
-  - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
+  - echo -n $CI_JOB_TOKEN | docker login $CI_REGISTRY -u gitlab-ci-token --password-stdin
 
 build:
   stage: build
   script:
-   - docker build -t nalaginrut/artanis:latest .
-   - docker push nalaginrut/artanis:latest
+   - docker build -t $CI_REGISTRY/nalaginrut/artanis:latest .
+   - docker push $CI_REGISTRY/nalaginrut/artanis:latest
   only:
     - docker
   
