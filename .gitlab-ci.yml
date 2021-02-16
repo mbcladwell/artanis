@@ -12,7 +12,7 @@ variables:
     DOCKER_TLS_CERTDIR: ""
 
 before_script:
-  - echo -n $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
 
 build:
   stage: build
