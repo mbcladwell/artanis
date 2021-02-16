@@ -1,41 +1,17 @@
-image: debian:sid-slim
+image: docker:latest
 
-before_script:
-  - apt-get -qq update
-  - apt-get -qq -y install texinfo guile-3.0 guile-3.0-dev build-essential automake git autoconf libtool libmariadbclient-dev libmariadbd-dev libnss3 libnss3-dev
-  - apt-get -qq -y install docker docker.io redis redis-server
-  - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
-  - git clone --depth 1 git://github.com/opencog/guile-dbi.git 
-  - cd guile-dbi/guile-dbi
-  - ./autogen.sh 
-  - ./configure --prefix=/usr && make
-  - make install 
-  - ldconfig 
-  - cd .. 
-  - cd guile-dbd-mysql 
-  - ./autogen.sh 
-  - ./configure --prefix=/usr && make 
-  - make install && ldconfig && cd ../..
-  - ./autogen.sh
-  - mkdir -p build && cd build && ../configure
-  - make V=
-  - make install
-test:
-  stage: test
-  script:
-   - make test && guile -c '(display (@ (artanis artanis) artanis-version))'
-  only:
-    - master
+services:
+ - docker:dind
+
 docker:
   stage: production
   variables:
     DOCKER_HOST: tcp://localhost:2375
   script:
-   - cd ..
+   - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
    - docker build -t register.gitlab.com/nalaginrut/artanis:latest .
    - docker push register.gitlab.com/nalaginrut/artanis:latest
   only:
-    - master
+    - docker
 stages:
-  - test
   - production
