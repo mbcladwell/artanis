@@ -1,22 +1,26 @@
 image: docker:stable
 
 services:
- - docker:dind
+  - name: docker:dind
+    command: ["dockerd-entrypoint.sh"]
+    entrypoint: ["env", "-u", "DOCKER_HOST"]
 
-docker:
-  stage: production
-  entrypoint: ["env", "-u", "DOCKER_HOST"]
-  command: ["dockerd-entrypoint.sh"]
-  variables:
+variables:
     DOCKER_HOST: tcp://docker:2375/
     DOCKER_DRIVER: overlay2
     # See https://github.com/docker-library/docker/pull/166
     DOCKER_TLS_CERTDIR: ""
+
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+build:
+  stage: build
   script:
-   - echo -n $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
    - docker build -t register.gitlab.com/nalaginrut/artanis:latest .
    - docker push register.gitlab.com/nalaginrut/artanis:latest
   only:
     - docker
+  
 stages:
-  - production
+  - build
