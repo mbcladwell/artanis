@@ -363,7 +363,22 @@ debug.enable = <boolean>")
      "The paths that needs to be monitored in debug-mode.
 This will take advantage of `inotify' in GNU/Linux kernel.
 NOTE: We may support GNU/Hurd as well, with its file monitor mechanism, in the future.
-debug.monitor = <PATHs>")))
+debug.monitor = <PATHs>")
+
+    ((cookie expire)
+      3600
+     "Cookie expiration time in seconds.
+      1 hour is 3600
+      6 hours 21600
+      1 month 2592000
+cookie.expire = <integer>")
+
+    ((cookie maxplates)
+      10
+     "Maximum number of plates per plateset
+cookie.maxplates = <integer>")
+    ))
+
 
 ;; Init all fields with default values
 (for-each (lambda (x) (conf-set! (car x) (cadr x))) (default-conf-values))
@@ -528,13 +543,20 @@ debug.monitor = <PATHs>")))
 (define (parse-namespace-cache item)
   (match item
     (('maxage maxage) (conf-set! '(cache maxage) (->integer maxage)))
-    (else (error parse-namespace-mail "Config: Invalid item" item))))
+    (else (error parse-namespace-cache "Config: Invalid item" item))))
 
 (define (parse-namespace-debug item)
   (match item
     (('enable enable) (conf-set! 'debug-mode (->bool enable)))
     (('monitor monitor) (conf-set! '(debug monitor) (->list monitor)))
-    (else (error parse-namespace-cache "Config: Invalid item" item))))
+    (else (error parse-namespace-debug "Config: Invalid item" item))))
+
+(define (parse-namespace-cookie item)
+  (match item
+    (('expire expire) (conf-set! '(cookie expire) (->integer expire)))
+    (('maxplates maxplates) (conf-set! '(cookie maxplates) (->integer maxplates)))
+    (else (error parse-namespace-cookie "Config: Invalid item" item))))
+
 
 (define (parse-config-item item)
   (match item
@@ -547,6 +569,7 @@ debug.monitor = <PATHs>")))
     (('mail rest ...) (parse-namespace-mail rest))
     (('cache rest ...) (parse-namespace-cache rest))
     (('debug rest ...) (parse-namespace-debug rest))
+    (('cookie rest ...) (parse-namespace-cookie rest))
     (((? string-null?)) #t) ; skip
     (else (error parse-config-item "Unsupported config namespace!" item))))
 
