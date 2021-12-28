@@ -17,8 +17,8 @@ before_script:
 build:
   stage: build
   script:
-   - docker build -t $CI_REGISTRY/nalaginrut/artanis:latest .
-   - docker push $CI_REGISTRY/nalaginrut/artanis:latest
+   - docker build -t $CI_REGISTRY/HardenedLinux/artanis:latest .
+   - docker push $CI_REGISTRY/HardenedLinux/artanis:latest
   only:
     - docker
   
