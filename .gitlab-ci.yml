@@ -1,0 +1,21 @@
+# This file is modified from a template.
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# The original template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Pages/HTML.gitlab-ci.yml
+# It is possible to update this template to generate the static site as well, but at present
+# the template assumes that the static site has been generated.
+pages:
+  stage: deploy
+  script:
+    - mkdir .public
+    - cp *.html .public
+    - cp *.ico .public
+    - cp *.atom .public
+    - cp -r css .public
+    - cp -r img .public
+    - rm -rf public
+    - mv .public public
+  artifacts:
+    paths:
+      - public
