@@ -1064,9 +1064,9 @@
               (dynamic-wind
                 (lambda ()
                   (set! handler
-                    (sigaction SIGINT (lambda (sig)
-                                        (run-when-sigint-hook)
-                                        (throw 'interrupt)))))
+                        (sigaction SIGINT (lambda (sig)
+                                            (run-when-sigint-hook)
+                                            (throw 'interrupt)))))
                 thunk
                 (lambda ()
                   (if handler
@@ -1124,12 +1124,21 @@
       ((-int) (eq? actual-type '-int))
       ((int) (memq actual-type '(-int +int)))
       (else (eq? expect-type actual-type))))
+  (define (check-boolean-mark v e)
+    ;; "?type" means either 'type or #f
+    (let ((str (symbol->string e))
+          (type (detect-type-name v)))
+      (and (eqv? #\? (string-ref str 0))
+           (or (not v)
+               (eq? type
+                    (string->symbol (substring/shared str 1)))))))
   (match (procedure-property op 'type-anno)
     (((targs ...) '-> (func-types ...))
      (for-each
       (lambda (v e)
         (or (eq? e 'ANY)
             (check-eq? (detect-type-name v) e)
+            (check-boolean-mark v e)
             (begin
               (DEBUG "(~{~a~^ ~}) =? (~{~a~^ ~})~%" targs args)
               (throw 'artanis-err 500 check-args-types
@@ -1145,6 +1154,7 @@
      (for-each
       (lambda (v e)
         (or (eq? e 'ANY)
+            (check-boolean-mark v e)
             (eq? (detect-type-name v) e)
             (throw 'artanis-err 500 check-function-types
                    "`Return value ~a(~a) is expected to be type `~a'"
