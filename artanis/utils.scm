@@ -1117,6 +1117,15 @@
    ((boolean? o) 'boolean)
    (else 'ANY)))
 
+(define (check-boolean-mark v e)
+  ;; "?type" means either 'type or #f
+  (let ((str (symbol->string e))
+        (type (detect-type-name v)))
+    (and (eqv? #\? (string-ref str 0))
+         (or (not v)
+             (eq? type
+                  (string->symbol (substring/shared str 1)))))))
+
 (define (check-args-types op args)
   (define (check-eq? actual-type expect-type)
     (case expect-type
@@ -1124,14 +1133,6 @@
       ((-int) (eq? actual-type '-int))
       ((int) (memq actual-type '(-int +int)))
       (else (eq? expect-type actual-type))))
-  (define (check-boolean-mark v e)
-    ;; "?type" means either 'type or #f
-    (let ((str (symbol->string e))
-          (type (detect-type-name v)))
-      (and (eqv? #\? (string-ref str 0))
-           (or (not v)
-               (eq? type
-                    (string->symbol (substring/shared str 1)))))))
   (match (procedure-property op 'type-anno)
     (((targs ...) '-> (func-types ...))
      (for-each

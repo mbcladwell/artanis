@@ -20,16 +20,25 @@
 (define-module (artanis websocket forward)
   #:use-module (artanis utils)
   #:use-module ((rnrs) #:select (define-record-type make-bytevector))
-  #:export (connect-to-service))
+  #:export (make-websocket-proxy
+            websocket-proxy?
+            websocket-proxy-address
+            websocket-proxy-port
+            websocket-proxy-socket
+            websocket-proxy-mode
+            make-proxy-to-service))
 
 ;; TODO: Add cert and security stuffs
 ;; TODO: Support "r", "w" and "rw" mode, the "w" and "rw" mode should be authenticated
 
 (define-record-type websocket-proxy
   (fields
-   ))
+   address
+   port
+   socket
+   mode))
 
-(::define (connect-to-service addr/ip port)
+(::define (make-proxy-to-service addr/ip port)
   (:anno: (string integer) -> ?port)
   (let* ((ai (car (getaddrinfo addr/ip (number->string port))))
          (s (socket (addrinfo:fam ai) (addrinfo:socktype ai) (addrinfo:protocol ai))))
@@ -39,7 +48,5 @@
         (setvbuf s 'non-blocking)
         s)
       (lambda (k . e)
-        (format (current-error-port "~a: ~a~%" k e))
+        (format (current-error-port) "~a: ~a~%" k e)
         #f))))
-
-(define )
