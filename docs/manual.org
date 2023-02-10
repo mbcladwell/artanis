@@ -66,16 +66,27 @@ guix install artanis
 
 *Install GNU Guile-3.0.5 or higher version:*
 
-Since GNU Artanis-0.5, the GNU Guile-3+ is required.
+Since GNU Artanis-0.5, GNU Guile-3+ is required.
+
+Install pre-requisites (typically available in linux package distributions):
+a C compiler, [[https://www.gnu.org/software/autoconf/]autoconf],
+[[https://www.gnu.org/software/automake/]automake],
+[[https://sourceware.org/libffi/]libffi],
+[[https://curl.se/libcurl/]libcurl],
+[[https://www.gnu.org/software/libtool/]libtool and libltdl], 
+[[https://www.gnu.org/software/libunistring/]libunistring],
+[[https://www.perl.org/]perl],
+[[https://tiswww.case.edu/php/chet/readline/rltop.html]readline] and
+[[http://zlib.net/]zlib].
 
 #+begin_src null
-wget -c ftp://ftp.gnu.org/gnu/guile/guile-3.0.5.tar.xz
-tar xvf guile-3.0.5.tar.xz
-cd guile-3.0.5 && ./configure && make #(NOTE: this may take very long time even looks like halting)
+wget -c ftp://ftp.gnu.org/gnu/guile/guile-3.0.9.tar.xz
+tar xvf guile-3.0.9.tar.xz
+cd guile-3.0.9 && ./configure && make #(NOTE: this may take a very long time)
 sudo make install
 #+end_src
 
-I would NOT recommend you trying to compile/install Guile from Git repo, since it'll take too much time of you.
+I would NOT recommend trying to compile/install Guile from Git repo, since it'll take a long time.
 
 *Install dependencies:*
 
@@ -86,17 +97,17 @@ wget -c https://github.com/opencog/guile-dbi/archive/guile-dbi-2.1.7.tar.gz
 tar xvzf guile-dbi-2.1.7.tar.gz
 cd guile-dbi-guile-dbi-2.1.7/guile-dbi && ./autogen.sh --no-configure && ./configure && make
 sudo make install
+cd ../..
 #+end_src
 
 + guile-dbd *[Optional]*. The dbd plugins connect to an actual database server.
 #+begin_src null
 
-tar xvzf guile-dbd-mysql-2.1.6.tar.gz
 cd guile-dbi-guile-dbi-2.1.7/guile-dbd-mysql && ./autogen.sh --no-configure && ./configure && make
 sudo make install
 #+end_src
-MySQL is used for the examples in this manual. You may find dbd plugins for other databases [[http://download.gna.org/guile-dbi][here]] or at this
-[[https://github.com/yagelix/guile-dbi/releases][mirror]]. The installation process is identical.
+MySQL is used for the examples in this manual. You may find dbd plugins for other databases 
+[[https://github.com/yagelix/guile-dbi/releases][here]]. The installation process is identical.
 
 *Install the latest GNU Artanis:*
 
@@ -114,7 +125,7 @@ First of all, thank you for contributing! You may clone the main git repository,
 git clone git://git.savannah.gnu.org/artanis.git
 
 # mirror on GitLab
-git clone https://gitlab.com/NalaGinrut/artanis.git
+git clone https://gitlab.com/hardenedlinux/artanis.git
 #+end_src
 * Configuration
 A configuration file is required when Artanis is run for the first time.
@@ -149,8 +160,8 @@ If you are already familiar with Guile, you may skip this section.
 
 Type `guile' in your console to enter the Guile REPL. You should see the following text displayed on your screen:
 #+begin_src null
-GNU Guile 2.2.2
-Copyright (C) 1995-2017 Free Software Foundation, Inc.
+GNU Guile 3.0.9
+Copyright (C) 1995-2023 Free Software Foundation, Inc.
 
 Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
 This program is free software, and you are welcome to redistribute it
@@ -297,7 +308,8 @@ Here is quick explanation:
 + The keyword-value pair src_scheme[:exports code]{#:conn #t} means applying for a DB connection from connection-pool.
   Then you can use src_scheme[:exports code]{(:conn rc)} to get the allocated connection for DB operations.
 
-+ Finally, the handler needs to return a string as the HTTP response body, so in this example, we have to use the Guile
++ Finally, the handler needs to return a string as the HTTP response body, so in this example,
+we have to use the Guile
   API /object->string/ to convert the query result into a string.
 
 /Exercise: Return a beautiful table in HTML rather than using object->string./
