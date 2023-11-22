@@ -90,7 +90,7 @@ I would NOT recommend trying to compile/install Guile from Git repo, since it'll
 
 *Install dependencies:*
 
-+ guile-dbi-2.1.7 (The tarball included guile-dbd) *[Optional]*
++ guile-dbi-2.1.9 (The tarball included guile-dbd) *[Optional]*
 #+begin_src null
 wget -c https://github.com/opencog/guile-dbi/archive/guile-dbi-2.1.7.tar.gz
 
@@ -103,11 +103,11 @@ cd ../..
 + guile-dbd *[Optional]*. The dbd plugins connect to an actual database server.
 #+begin_src null
 
-cd guile-dbi-guile-dbi-2.1.7/guile-dbd-mysql && ./autogen.sh --no-configure && ./configure && make
+cd guile-dbi-guile-dbi-2.1.9/guile-dbd-mysql && ./autogen.sh --no-configure && ./configure && make
 sudo make install
 #+end_src
 MySQL is used for the examples in this manual. You may find dbd plugins for other databases 
-[[https://github.com/yagelix/guile-dbi/releases][here]]. The installation process is identical.
+[[ https://github.com/opencog/guile-dbi][here]]. The installation process is identical.
 
 *Install the latest GNU Artanis:*
 
