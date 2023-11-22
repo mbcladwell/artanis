@@ -4,7 +4,7 @@ ENV         LANG C.UTF-8
 ADD         sources.list /etc/apt/
 RUN     apt-get update \
         && apt-config dump | grep -we Recommends -e Suggests | sed s/1/0/ | tee /etc/apt/apt.conf.d/99norecommend \
-        && apt-get install --no-install-recommends -y texinfo guile-3.0 guile-3.0-dev build-essential automake git autoconf libtool default-libmysqlclient-dev libmariadbd-dev libnss3 libnss3-dev redis redis-server gettext libcurl4-nss-dev \
+        && apt-get install --no-install-recommends -y texinfo guile-3.0 guile-3.0-dev build-essential automake git autoconf libtool default-libmysqlclient-dev libmariadbd-dev libnss3 libnss3-dev redis redis-server gettext libcurl4-openssl-dev \
         && rm -rf /var/lib/apt/lists/* \
 	&& git config --global http.sslverify false
 
