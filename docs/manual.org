@@ -109,6 +109,15 @@ sudo make install
 MySQL is used for the examples in this manual. You may find dbd plugins for other databases 
 [[ https://github.com/opencog/guile-dbi][here]]. The installation process is identical.
 
++ guile-curl for the client module.
+#+begin_src null
+git clone --depth 1 https://github.com/spk121/guile-curl.git
+cd guile-curl && ./bootstrap && ./configure --prefix=/usr && make -j 
+make install
+ln -s /usr/lib/guile/3.0/extensions/libguile-curl.* /usr/lib/ 
+ldconfig
+#+end_src
+
 *Install the latest GNU Artanis:*
 
 #+begin_src null
