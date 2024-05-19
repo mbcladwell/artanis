@@ -1579,7 +1579,7 @@ You can use src_scheme[:exports code]{#:cookies mode} to define a URL rule handl
 
 Cookie object is used to create/modify the cookie that will return to the client automatically. This is the instance of a cookie which can be controlled in server-side.
 
-If you want to get the cookie from the client, you should use src_scheme[:exports code]{:cookies-copy}.
+If you want to get the cookie from the client, you should use src_scheme[:exports code]{:cookies-value}.
 
 And the APIs:
 #+begin_src scheme
@@ -1591,7 +1591,7 @@ And the APIs:
                    #:path #f #:secure #f #:http-only #f)
 
 (:cookies-remove! rc key) ; remove cookie from client
-(:cookies-copy rc name) ; get cookie from the client
+(:cookies-value rc name) ; get cookie from the client
 #+end_src
 
 For example:
