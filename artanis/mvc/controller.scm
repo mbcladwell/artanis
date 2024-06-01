@@ -42,7 +42,7 @@
              #:use-module (artanis utils))
            (define-syntax-rule (#,(datum->syntax x 'view-render) method e)
              (let ((file (format #f "~a/app/views/~a/~a.html.tpl"
-                                 (current-toplevel) 'name method)))
+                                 (immutable-toplevel) 'name method)))
                (cond
                 ((file-exists? file)
                  (let ((html ((@@ (artanis tpl) tpl-render-from-file) file e)))
@@ -59,7 +59,7 @@
 (define-syntax-rule (scan-controllers) (scan-app-components 'controllers))
 
 (define (load-app-controllers)
-  (define toplevel (current-toplevel))
+  (define toplevel (immutable-toplevel))
   (display "Loading controllers...\n" (artanis-current-output))
   (use-modules (artanis mvc controller)) ; black magic to make Guile happy
   (let ((cs (scan-controllers)))

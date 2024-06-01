@@ -41,6 +41,8 @@
             *artanis-entry*
             %current-toplevel
             current-toplevel
+            %immutable-toplevel
+            immutable-toplevel
             find-ENTRY-path
             cmd:is-dry-run?
             cmd:is-force?
@@ -130,9 +132,21 @@
                  "No ENTRY! Are you in a legal Artanis app dir? Or maybe you need to create a new app?")))
      ((-> pwd) => proc)
      (else (lp (last-path pwd))))))
-(define (current-toplevel)
-  (or (%current-toplevel)
+
+;; this is in orig
+;;(define (current-toplevel)
+;;  (or (%current-toplevel)
+;;      (find-ENTRY-path identity #t)))
+
+(define %immutable-toplevel (make-parameter #f))
+(define (immutable-toplevel)
+  (or (%immutable-toplevel)
       (find-ENTRY-path identity #t)))
+(define (current-toplevel)
+  (string-append \"/tmp/\" (and=> (string-match \".+/(.+)$\" (getcwd)) (lambda (m) (match:substring m 1)))))
+
+;;replacement is above
+
 
 ;; parameters for command
 (define cmd:is-dry-run? (make-parameter #f))

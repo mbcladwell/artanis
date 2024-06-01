@@ -40,7 +40,7 @@
 (define (include-the-file args)
   (let* ((pub (basename (get-conf '(server pub))))
          (filename (string-trim-both
-                    (format #f "~a/~a/~a" (current-toplevel) pub args))))
+                    (format #f "~a/~a/~a" (immutable-toplevel) pub args))))
     (if (file-exists? filename)
         ;;(format #f "~s" (cat filename #f))
         (call-with-input-string (cat filename #f) tpl-read)
@@ -60,7 +60,7 @@
              "Tempate rendering error: invalid args `~a'!" args))))
   (define-syntax-rule (->js-hash filename)
     (let* ((path (get-conf '(server jsmanifest)))
-           (mfile (format #f "~a/~a/manifest.json" (current-toplevel) path))
+           (mfile (format #f "~a/~a/manifest.json" (immutable-toplevel) path))
            (jsmap (and (file-exists? mfile)
                        (call-with-input-file mfile json->scm))))
       (or (and jsmap (assoc-ref jsmap filename))

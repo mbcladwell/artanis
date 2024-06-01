@@ -55,7 +55,7 @@
   (use-modules (artanis webapi restful)) ; black magic to make Guile happy
   (for-each
    (lambda (s)
-     (load (format #f "~a/app/api/~a.scm" (current-toplevel) s)))
+     (load (format #f "~a/app/api/~a.scm" (immutable-toplevel) s)))
    (scan-restful-api)))
 
 (define (register-restful-api)

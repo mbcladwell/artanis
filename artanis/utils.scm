@@ -296,8 +296,8 @@
         (lp (cddr rest) e #f))))))
 
 (define-syntax-rule (static-filename path)
-  (if (current-toplevel)
-      (format #f "~a/pub/~a" (current-toplevel) path)
+  (if (immutable-toplevel)
+      (format #f "~a/pub/~a" (immutable-toplevel) path)
       (format #f "./pub/~a" path)))
 
 (define-syntax-rule (request-ip req)
@@ -850,7 +850,7 @@
 (define* (scan-app-components component #:optional (sym? #t))
   (define-syntax-rule (-> x)
     (if sym? (string->symbol x) x))
-  (let* ((toplevel (current-toplevel))
+  (let* ((toplevel (immutable-toplevel))
          (cpath (format #f "~a/app/~a/" toplevel component)))
     (cond
      ((file-exists? cpath)
@@ -1326,7 +1326,7 @@
 
 (define (get-syspage file)
   (let ((local-syspage (format #f "~a/sys/pages/~a"
-                               (current-toplevel) file)))
+                               (immutable-toplevel) file)))
     (if (file-exists? local-syspage)
         local-syspage
         (let ((sys-syspage (format #f "~a/~a" (get-conf '(server syspage path)) file)))

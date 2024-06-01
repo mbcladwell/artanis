@@ -74,7 +74,7 @@
     (run-hook *refresh-hook*)))
 
 (define (try-load-entry)
-  (let ((entry (string-append (current-toplevel) "/" *artanis-entry*)))
+  (let ((entry (string-append (immutable-toplevel) "/" *artanis-entry*)))
     (load entry)))
 
 (define (try-load-app)
@@ -123,7 +123,7 @@
 (define (init-work)
   (clean-stuffs)
   (add-to-load-path (current-toplevel))
-  (add-to-load-path (string-append (current-toplevel) "/lib"))
+  (add-to-load-path (string-append (immutable-toplevel)))
   (try-load-app)
   (register-rules)
   (load-rules))
