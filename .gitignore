@@ -56,13 +56,11 @@ cscope.files
 *.scan
 *.am
 *.d
-!artanis/commands/version.scm
-artanis/version.scm
 ltmain.sh
 libtool
 examples/upload
 configure
-etc/artanis/artanis.conf
 typescript
 .gitconfig
 *.patch
+*.scm~
