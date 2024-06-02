@@ -1,4 +1,4 @@
-#! guileexecutalbe \
+#! guileexecutable \
 -e main
 !#
 
