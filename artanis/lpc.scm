@@ -27,7 +27,7 @@
   #:use-module (artanis config)
   #:use-module (artanis route)
   #:use-module (artanis third-party json)
-  #:use-module (artanis third-party redis)
+;;  #:use-module (artanis third-party redis)
   #:use-module ((rnrs) #:select (define-record-type))
   #:export (lpc-backend-name
             lpc-backend-destroy!
@@ -45,12 +45,12 @@
             lpc-flush!
             lpc-impl
 
-            backend-impl:set!/redis
-            backend-impl:remove!/redis
-            backend-impl:destroy!/redis
-            backend-impl:ref/redis
-            backend-impl:set!/redis
-            new-lpc-backend/redis
+            ;; backend-impl:set!/redis
+            ;; backend-impl:remove!/redis
+            ;; backend-impl:destroy!/redis
+            ;; backend-impl:ref/redis
+            ;; backend-impl:set!/redis
+            ;; new-lpc-backend/redis
 
             get-lpc-instance!
             intern-lpc-instance!
@@ -70,29 +70,29 @@
    remove!
    flush!))
 
-(define (backend-impl:destroy!/redis backend)
-  (redis-close (lpc-backend-impl-meta backend)))
+;; (define (backend-impl:destroy!/redis backend)
+;;   (redis-close (lpc-backend-impl-meta backend)))
 
-(define (backend-impl:ref/redis backend key)
-  (redis-send (lpc-backend-impl-meta backend) (redis-get (list (lpc-prefix key)))))
+;; (define (backend-impl:ref/redis backend key)
+;;   (redis-send (lpc-backend-impl-meta backend) (redis-get (list (lpc-prefix key)))))
 
-(define (backend-impl:set!/redis backend key value)
-  (redis-send (lpc-backend-impl-meta backend) (redis-set (list (lpc-prefix key) value))))
+;; (define (backend-impl:set!/redis backend key value)
+;;   (redis-send (lpc-backend-impl-meta backend) (redis-set (list (lpc-prefix key) value))))
 
-(define (backend-impl:remove!/redis backend key)
-  (redis-send (lpc-backend-impl-meta backend) (redis-del (list (lpc-prefix key)))))
+;; (define (backend-impl:remove!/redis backend key)
+;;   (redis-send (lpc-backend-impl-meta backend) (redis-del (list (lpc-prefix key)))))
 
-(define (backend-impl:flush!/redis backend)
-  (noop))
+;; (define (backend-impl:flush!/redis backend)
+;;   (noop))
 
-(define* (new-lpc-backend/redis #:key (host "127.0.0.1") (port 6379))
-  (make-lpc-backend-impl 'redis
-                         backend-impl:destroy!/redis
-                         (redis-connect #:host host #:port port)
-                         backend-impl:ref/redis
-                         backend-impl:set!/redis
-                         backend-impl:remove!/redis
-                         backend-impl:flush!/redis))
+;; (define* (new-lpc-backend/redis #:key (host "127.0.0.1") (port 6379))
+;;   (make-lpc-backend-impl 'redis
+;;                          backend-impl:destroy!/redis
+;;                          (redis-connect #:host host #:port port)
+;;                          backend-impl:ref/redis
+;;                          backend-impl:set!/redis
+;;                          backend-impl:remove!/redis
+;;                          backend-impl:flush!/redis))
 
 (define (backend-impl:destroy!/json backend)
   #t)
@@ -151,7 +151,7 @@
 (define* (new-lpc #:key (backend 'redis) (read-only? #f))
   (lambda args
     (let ((ctor (case backend
-                  ((redis) new-lpc-backend/redis)
+                ;;  ((redis) new-lpc-backend/redis)
                   ((json) new-lpc-backend/json))))
       (make-lpc (apply ctor args) read-only?))))
 
