@@ -62,6 +62,13 @@ You may read the [[https://guix.gnu.org/manual/en/html_node/Installation.html][G
 guix install artanis
 #+end_src
 
+** For Ubuntu/Debian users to install dependencies
+#+begin_src null
+apt-get -qq -y install texinfo guile-3.0 guile-3.0-dev build-essential automake git autoconf libtool libmariadb-dev-compat libmariadb-dev libnss3 libnss3-dev
+
+apt-get -qq -y install gettext redis redis-server libcurl4-openssl-dev
+#+end_src
+
 ** For hardcore users
 
 *Install GNU Guile-3.0.5 or higher version:*
@@ -73,16 +80,17 @@ a C compiler, [[https://www.gnu.org/software/autoconf/]autoconf],
 [[https://www.gnu.org/software/automake/]automake],
 [[https://sourceware.org/libffi/]libffi],
 [[https://curl.se/libcurl/]libcurl],
-[[https://www.gnu.org/software/libtool/]libtool and libltdl], 
+[[https://www.gnu.org/software/libtool/]libtool and libltdl],
 [[https://www.gnu.org/software/libunistring/]libunistring],
 [[https://www.perl.org/]perl],
+[[https://firefox-source-docs.mozilla.org/security/nss/index.html]libnss (Network Security Services)],
 [[https://tiswww.case.edu/php/chet/readline/rltop.html]readline] and
 [[http://zlib.net/]zlib].
 
 #+begin_src null
-wget -c ftp://ftp.gnu.org/gnu/guile/guile-3.0.9.tar.xz
-tar xvf guile-3.0.9.tar.xz
-cd guile-3.0.9 && ./configure && make #(NOTE: this may take a very long time)
+wget -c ftp://ftp.gnu.org/gnu/guile/guile-3.0.10.tar.xz
+tar xvf guile-3.0.10.tar.xz
+cd guile-3.0.10 && ./configure && make #(NOTE: this may take a very long time)
 sudo make install
 #+end_src
 
@@ -90,11 +98,11 @@ I would NOT recommend trying to compile/install Guile from Git repo, since it'll
 
 *Install dependencies:*
 
-+ guile-dbi-2.1.9 (The tarball included guile-dbd) *[Optional]*
++ guile-dbi-2.1.8 (The tarball included guile-dbd) *[Optional]*
 #+begin_src null
-wget -c https://github.com/opencog/guile-dbi/archive/guile-dbi-2.1.7.tar.gz
+wget -c https://github.com/opencog/guile-dbi/archive/guile-dbi-2.1.8.tar.gz
 
-tar xvzf guile-dbi-2.1.7.tar.gz
+tar xvzf guile-dbi-2.1.8.tar.gz
 cd guile-dbi-guile-dbi-2.1.7/guile-dbi && ./autogen.sh --no-configure && ./configure && make
 sudo make install
 cd ../..
@@ -103,24 +111,53 @@ cd ../..
 + guile-dbd *[Optional]*. The dbd plugins connect to an actual database server.
 #+begin_src null
 
-cd guile-dbi-guile-dbi-2.1.9/guile-dbd-mysql && ./autogen.sh --no-configure && ./configure && make
+cd guile-dbi-guile-dbi-2.1.8/guile-dbd-mysql && ./autogen.sh --no-configure && ./configure && make
 sudo make install
 #+end_src
-MySQL is used for the examples in this manual. You may find dbd plugins for other databases 
+MySQL is used for the examples in this manual. You may find dbd plugins for other databases
 [[ https://github.com/opencog/guile-dbi][here]]. The installation process is identical.
 
 + guile-curl for the client module.
 #+begin_src null
-git clone --depth 1 https://github.com/spk121/guile-curl.git
-cd guile-curl && ./bootstrap && ./configure --prefix=/usr && make -j 
+git clone https://github.com/spk121/guile-curl.git
+cd guile-curl && git checkout v0.9
+./bootstrap && ./configure --prefix=/usr && make -j
 make install
-ln -s /usr/lib/guile/3.0/extensions/libguile-curl.* /usr/lib/ 
+ln -s /usr/lib/guile/3.0/extensions/libguile-curl.* /usr/lib/
 ldconfig
 #+end_src
+**NOTE:** You may need to make necessary soft links according to above script.
+
++ guile-redis:
+#+begin_src null
+git clone https://github.com/aconchillo/guile-redis.git
+cd guile-redis
+git checkout -b 2.2.0
+autoreconf -vif
+./configure --prefix=/usr
+make
+make install
+#+end_src
+
++ guile-json:
+#+begin_src null
+git clone https://github.com/aconchillo/guile-json.git
+cd guile-json
+git checkout -b 4.7.3
+autoreconf -iv
+./configure --prefix=/usr
+make -j5
+sudo make install
+sudo ldconfig
+#+end_src
+
++ libnss (Network Security Services):
+Please follow the [[https://firefox-source-docs.mozilla.org/security/nss/build.html] official guide].
+It's better to install it with your distro's pkg manager.
 
 *Install the latest GNU Artanis:*
 
-#+begin_src null
+,#+begin_src null
 wget -c http://ftp.gnu.org/gnu/artanis/artanis-latest.tar.bz2
 tar xvjf artanis-latest.tar.bz2
 cd artanis-latest && ./autogen.sh --no-configure && ./configure && make
@@ -136,6 +173,7 @@ git clone git://git.savannah.gnu.org/artanis.git
 # mirror on GitLab
 git clone https://gitlab.com/hardenedlinux/artanis.git
 #+end_src
+
 * Configuration
 A configuration file is required when Artanis is run for the first time.
 
@@ -278,7 +316,7 @@ You can use a DB (such as mysql) with GUI tools such as "adminer", independently
                             (email varchar 20)))
  'valid?)
 ;; ==> #t
-(mtable 'set 'Persons #:name "nala" #:age 99 #:email "nala@artanis.com")
+(mtable 'set 'Persons #:name "nala" #:age 20 #:email "nala@artanis.dev")
 (mtable 'get 'Persons #:columns '(name email))
 ;; ==> ((("name" . "nala") ("email" . "nala@artanis.com")))
 #+end_src
@@ -490,6 +528,8 @@ component list:
   model
   controller
   migration
+  view
+  lib
 
 Options:
   -h, [--help]     # Print this screen
@@ -809,12 +849,12 @@ As part of the /view/ component. An HTML template is generated for each method. 
 For the /controller/ component, you get a /show/ method handler, as:
 #+begin_src scheme
 (article-define show
-                (lambda (rc)
-                  "<h1>This is article#show</h1><p>Find me in app/views/article/show.html.tpl</p>"
-                  ;; TODO: add controller method `show'
-                  ;; uncomment this line if you want to render view from template
-                  ;; (view-render "show")
-                  ))
+  (lambda (rc)
+    "<h1>This is article#show</h1><p>Find me in app/views/article/show.html.tpl</p>"
+    ;; TODO: add controller method `show'
+    ;; uncomment this line if you want to render view from template
+    ;; (view-render "show")
+    ))
 #+end_src
 Of course, you're free to use or not use these templates. If you want to use the /view template/, just
 uncomment the last line src_scheme[:exports code]{(view-render "show")}.
@@ -826,11 +866,72 @@ For more detail about template in Views, please see [[Layouts and Rendering in G
 ** Models
 Models contains operations of database.
 
+*** Create models
+
+A Model a is usually connected to the same named Controller. However, in practical, users may create multiple Models for one Controller. Hence, GNU Artanis creates Model outside Controller, rather than autogenerate a Model when creating Controller.
+
+#+begin_src bash
+art create mytest
+cd mytest
+
+# Create model
+art draw model user
+# drawing    model user
+# working    Models `user.scm'
+
+# check result
+ls app/models/
+# user.scm
+#+end_src
+
+In this case, we created a Model named **user**. A file named **user.scm** is in **app/models** now, let's open it:
+
+#+begin_src scheme
+(import (artanis mvc model))
+;; Model user definition of mytest
+;; Please add your license header here.
+;; This file is generated automatically by GNU Artanis.
+(create-artanis-model user) ; DO NOT REMOVE THIS LINE!!!
+#+end_src
+
+It's done! These code are self-explain.
+
+Next, let's try to define an **user** table.
+
+*** Define table in Model
+
+In this example, we craete a table like this:
+
+#+begin_src nil
++-------------------------------------------------------------+
+| Field | Type        | Null | Key | Default | Extra          |
+|-------+-------------+------+-----+---------+----------------|
+| id    | auto        | NO   | PRI | NULL    | auto_increment |
+| name  | char-field  | NO   |     | NULL    |                |
+| email | char-field  | NO   |     | NULL    |                |
++-------------------------------------------------------------+
+#+end_src
+
+For Model definition syntax in GNU Artanis, we have:
+
+#+begin_src
+(create-artanis-model
+ user
+ (:deps)
+ (id auto (#:primary-key))
+ (name char-field (#:not-null #:maxlen 128))
+ (email char-field (#:not-null #:maxlen 128))
+ )
+#+end_src
+
+**NOTE:** If you have definition, and you've imported in any controller, when booting GNU Artanis with src_scheme[:exports code](art work),
+then the defined table will be created automatically in the specified database. Don't worry, it will be created only once.
+
+*** Further reading
+
 For modifying tables, you should read [[Migration][Migration]].
 
 For other DB operation, please read [[FPRM (experimental)][FPRM]].
-
-(To be continued...)
 * Query String
 A query string is a special part of a URL:
 
@@ -1220,12 +1321,12 @@ Usage:
 
 For example:
 #+begin_src scheme
-(->sql select * from 'Persons (where #:city "Shenzhen"))
+(->sql select * from 'Persons (where #:city "Tokyo"))
 (->sql select '(age name) from 'Persons (where "age < 30"))
 #+end_src
 The SQL update command is quite different to SQL grammar. Example:
 #+BEGIN_SRC scheme
-(->sql update 'table set (list (list phone_number "13666666666")) (where #:name "john"))
+(->sql update 'table set (list (list phone_number "08080001234")) (where #:name "john"))
 #+END_SRC
 ** FPRM (experimental)
 FPRM stands for Functional Programming Relational Mapping. It's a new word I invented. But it's not new concept. FP here indicates *stateless*.
