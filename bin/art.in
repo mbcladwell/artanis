@@ -1,0 +1,58 @@
+#! guileexecutable \
+-e main
+!#
+
+;;  -*-  indent-tabs-mode:nil; coding: utf-8 -*-
+;;  Copyright (C) 2015-2024
+;;      "Mu Lei" known as "NalaGinrut" <NalaGinrut@gmail.com>
+;;  Artanis is free software: you can redistribute it and/or modify
+;;  it under the terms of the GNU General Public License and GNU
+;;  Lesser General Public License published by the Free Software
+;;  Foundation, either version 3 of the License, or (at your option)
+;;  any later version.
+
+;;  Artanis is distributed in the hope that it will be useful,
+;;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;  GNU General Public License and GNU Lesser General Public License
+;;  for more details.
+
+;;  You should have received a copy of the GNU General Public License
+;;  and GNU Lesser General Public License along with this program.
+;;  If not, see <http://www.gnu.org/licenses/>.
+
+(setlocale LC_ALL "")
+(use-modules (ice-9 getopt-long)
+             (ice-9 format)
+             (artanis utils)
+             (artanis env)
+             (artanis commands)
+             (artanis commands help))
+
+(define *cmds-without-folder*
+  '("help" "create" "version"))
+
+(define (check-only? cmd)
+  (member cmd *cmds-without-folder*))
+
+(define main
+  (lambda (args)
+    (cond
+     ((find-command (if (no-command? args) "help" (cadr args)))
+      values =>
+      (lambda (name mod)
+        (cond
+         ((string=? name "help") ((module-ref mod 'main)))
+         (else
+          (parameterize ((%current-toplevel (find-ENTRY-path identity (check-only? name))))
+            (apply (module-ref mod 'main) (if (no-command-args? args)
+                                              '()
+                                              (cdr args))))))))
+     ((string=? (cadr args) "list-all-cmds")
+      (format #t "~{~a~^    ~}~%" ((@@ (artanis commands help) get-all-commands))))
+     (else
+      (format (current-error-port)
+              "art: unknown command ~s~%" (cadr args))
+      (format (current-error-port)
+              "Try `art help' for more information.~%")
+      (exit 1)))))
