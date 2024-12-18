@@ -34,6 +34,7 @@
   #:use-module (ice-9 receive)
   #:use-module (ice-9 q)
   #:use-module (ice-9 control)
+  #:use-module (ice-9 threads)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-19)
   #:use-module (web http)
@@ -99,8 +100,7 @@
             is-guile-compatible-server-core? positive-integer? negative-integer?
             io-exception:peer-is-shutdown? io-exception:out-of-memory?
             out-of-system-resources? allow-long-live-connection?
-            free-JS-announcement gen-cache-file current-route-cache
-            call-with-new-process)
+            free-JS-announcement gen-cache-file current-route-cache)
   #:re-export (the-environment
                utf8->string
                bytevector?
@@ -1083,23 +1083,30 @@
   (if (not (provided? 'posix))
       (lambda (thunk handler-thunk) (thunk))
       (lambda (thunk handler-thunk)
-        (let ((handler #f))
+        (let ((handler (make-parameter #f)))
           (catch 'interrupt
             (lambda ()
               (dynamic-wind
                   (lambda ()
-                    (set! handler
-                          (sigaction SIGINT (lambda (sig)
-                                              (run-when-sigint-hook)
-                                              (throw 'interrupt)))))
+                    (display "hit!\n")
+                    (handler (sigaction SIGINT (lambda (sig)
+                                                 (run-when-sigint-hook)
+                                                 (display "111\n")
+                                                 (throw 'interrupt)))))
                   thunk
                   (lambda ()
                     (if handler
                         ;; restore Scheme handler, SIG_IGN or SIG_DFL.
-                        (sigaction SIGINT (car handler) (cdr handler))
+                        (sigaction SIGINT (car (handler)) (cdr (handler)))
                         ;; restore original C handler.
                         (sigaction SIGINT #f)))))
-            (lambda (k . _) (handler-thunk)))))))
+            (lambda (k . _)
+              (display "asdf\n")
+              (handler-thunk)
+              ;;(cancel-thread (current-thread) 1)
+              ;;((car (handler)) SIGINT)
+              ;;(raise SIGINT)
+              ))))))
 
 (define-syntax-rule (define-box-type name)
   (define-record-type name (fields treasure)))
@@ -1611,11 +1618,3 @@
     (if (string-null? p)
         (format #f "~a/cache/index.html" (current-tmp))
         (format #f "~a/cache/~a.html" (current-tmp) (-> path)))))
-
-(define (call-with-new-process thunk)
-  (let ((i (primitive-fork)))
-    (cond
-     ((< i 0)
-      (error call-with-new-process
-             "Fork error!" i))
-     ((= i 0) (thunk)))))
