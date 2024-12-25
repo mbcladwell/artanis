@@ -35,6 +35,7 @@
   #:use-module (ice-9 q)
   #:use-module (ice-9 control)
   #:use-module (ice-9 threads)
+  #:use-module (ice-9 control)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-19)
   #:use-module (web http)
@@ -1174,6 +1175,13 @@
       (lambda (v e)
         (or (eq? e 'ANY)
             (eq? (detect-type-name v) e)
+            (match e
+              (('or types ...)
+               (any (lambda (t)
+                      (or (equal? t v)
+                          (eq? t (detect-type-name v))))
+                    types))
+              (else #f))
             (throw 'artanis-err 500 check-function-types
                    "`Return value ~a(~a) is expected to be type `~a'"
                    v (detect-type-name v) e)))
@@ -1615,3 +1623,23 @@
     (if (string-null? p)
         (format #f "~a/cache/index.html" (current-tmp))
         (format #f "~a/cache/~a.html" (current-tmp) (-> path)))))
+
+(define-syntax-rule (sxml-query pattern alst)
+  (let/ec return
+    (fold
+     (lambda (x p)
+       (or (assoc-ref p x)
+           (return #f)))
+     alst
+     (string-split pattern #\/))))
+
+(define (sxml-replace! alst key val)
+  (define (list-deep-copy lst)
+    (map (lambda (x) (if (list? x) (list-deep-copy x) x)) lst))
+  (let ((new-lst (list-deep-copy alst))
+        (v (assoc-ref alst key)))
+    (cond
+     ((null? v)
+      (assoc-set! new-lst key val))
+     (else
+      (assoc-set! new-lst key (cons val v))))))
