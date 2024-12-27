@@ -101,7 +101,8 @@
             is-guile-compatible-server-core? positive-integer? negative-integer?
             io-exception:peer-is-shutdown? io-exception:out-of-memory?
             out-of-system-resources? allow-long-live-connection?
-            free-JS-announcement gen-cache-file current-route-cache)
+            free-JS-announcement gen-cache-file current-route-cache
+            gnu-locale->http-lang-tag http-lang-tag->gnu-locale)
   #:re-export (the-environment
                utf8->string
                bytevector?
@@ -1643,3 +1644,19 @@
       (assoc-set! new-lst key val))
      (else
       (assoc-set! new-lst key (cons val v))))))
+
+(define *http-lang-tag-re* (string->irregex "([a-z]+)-([A-Z]+"))
+(define (http-lang-tag->gnu-locale lang)
+  ;; replace - with _
+  (if (irregex-match *http-lang-tag-re* lang)
+      (irregex-replace/all "-" lang "_")
+      (throw 'artanis-err 500 http-lang-tag->gnu-locale
+             "Invalid HTTP lang tag format: ~a" lang)))
+
+(define *gnu-locale-re* (string->irregex "([a-z]+)_([A-Z]+"))
+(define (gnu-locale->http-lang-tag lang)
+  ;; replace _ with -
+  (if (irregex-match *gnu-locale-re* lang)
+      (irregex-replace/all "_" lang "-")
+      (throw 'artanis-err 500 gnu-locale->http-lang-tag
+             "Invalid GNU locale format: ~a" lang)))

@@ -21,22 +21,66 @@
   #:use-module (artanis config)
   #:use-module (artanis i18n json)
   #:use-module (artanis i18n po)
+  #:use-module (ice-9 i18n)
+  #:use-module (ice-9 match)
   #:export (i18n-init
             current-lang
-            :i18n))
+            i18n-handler))
 
 (define i18n-getter (make-parameter #f))
 
 (define current-lang (make-parameter #f))
 
-(define* (:i18n key #:optional (lang (current-lang)))
-  (cond
-   ((not lang) key)
-   ((i18n-getter)
-    => (lambda (getter)
-         (or (getter lang key)
-             key)))
-   (else key)))
+(define* (make-i18n-handler)
+  (define (->fix lang)
+    (let ((encoding (get-conf '(session encoding))))
+      (string-concatenate (list lang "." encoding))))
+  (let* ((lang (current-lang))
+         (locale (make-locale LC_ALL (->fix lang))))
+    (lambda (pattern)
+      (match pattern
+        ((? string? key)
+         (cond
+          ((not lang) key)
+          ((i18n-getter)
+           => (lambda (getter)
+                (or (getter lang key)
+                    key)))
+          (else key)))
+        (('money money)
+         ;; NOTE: We recommend the name of currency rather than the symbol.
+         ;;       Say, JPY rather than ¥. Because some of the symbols are
+         ;;       impossible to distinguish from each other. For example,
+         ;;       the symbol of CNY RMB and JPY Yen are both ¥.
+         ;; NOTE: Of course I know CNY is actually ￥, and JPY is actually ¥.
+         ;;       But they are the same string detected from GNU libc.
+         (let ((num (if (number? money) money (string->number money))))
+           ((monetary-amount->locale-string num #t locale))))
+        (('moneysign money)
+         (let ((num (if (number? money) money (string->number money))))
+           ;; NOTE: The GNU lib on Linux will add "-" automatically for
+           ;;       historical reasons. Say, "-$", so we have to drop it.
+           (string-trim
+            (monetary-amount->locale-string num #f locale)
+            #:\-)))
+        (('number number fraction)
+         (number->locale-string num fraction locale))
+        (('local-date seconds)
+         (strftime (locale-date-format locale) (localtime seconds)))
+        (('global-data seconds)
+         (strftime (global-date-format locale) (gmtime seconds)))
+        (('local-time seconds)
+         (strftime (locale-time-format locale) (localtime seconds)))
+        (('global-time seconds)
+         (strftime (global-time-format locale) (gmtime seconds)))
+        (('year year)
+         (locale-year year locale))
+        (('day day)
+         (locale-day day locale))
+        (('month month)
+         (locale-month month locale))
+        (else (throw 'artanis-error 500 :i18n
+                     "Unknown i18n pattern" pattern))))))
 
 (define (i18n-init)
   (let ((i18n-mode (get-conf '(session i18n))))

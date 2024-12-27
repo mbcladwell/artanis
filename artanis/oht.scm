@@ -600,6 +600,21 @@
                        (lambda (h) (h rc 'spawn))))))))
     (else (throw 'artanis-err 500 auth-maker "Wrong pattern ~a" val))))
 
+(define (i18n-maker val rule keys)
+  (define-syntax-rule (from-url rc field)
+    (make-i18n-handler (params rc field)))
+  (define-syntax-rule (from-cookie rc cookie-name)
+    (make-i18n-handler (:cookies-ref rc 'lang cookie-name)))
+  (define-syntax-rule (from-header rc)
+    (let ((lang (get-header rc "Accept-Language")))
+      (make-i18n-handler (gnu-locale->http-lang-tag lang))))
+  (lambda (rc)
+    (match cmd
+      ((? string? field) (from-url rc field))
+      (`(cookie ,name) (from-cookie rc name))
+      ('header (from-header rc))
+      (else (throw 'artanis-err 500 i18n-maker "Invalid cmd `~a'!" cmd)))))
+
 ;; -------------------------------------------------------------------
 
 ;; NOTE: these short-cut-maker should never be exported!
@@ -612,7 +627,7 @@
 ;; 2. Arounded with ${..}, and there's "@" as its prefix, say, ${@xxx},
 ;;    it means "to get xxx from body" (POST way).
 (oh-define!
- `(;; a short way for sql-mapping from the bindings in rule
+ `( ;; a short way for sql-mapping from the bindings in rule
    ;; e.g #:sql-mapping "select * from table where id=${:id}"
    (#:sql-mapping . ,sql-mapping-maker)
 
@@ -767,11 +782,34 @@
    ;; 1. #:with-auth must be cooperated with #:session
    ;;    If you use #:with-auth without #:session, then it throws
    ;;    an exception.
-   (#:with-auth . ,with-auth-maker)))
+   (#:with-auth . ,with-auth-maker)
+
+   ;; Register i18n lang field
+   ;; NOTE: The lang must be full language name, like "en_US", not "en"
+   ;; Modes:
+   ;; 1. string, e.g:
+   ;;    (get "/index/:lang" #:i18n "lang" ...)
+   ;;    This means the lang field will be fetched from (params rc "lang")
+   ;;    NOTE: URL i18n is recommended for the sessionless services, like the
+   ;;          page view for common visitors.
+   ;; 2. `(cookie ,name)
+   ;;    (get "/index" #:i18n `(cookie ,name) ...)
+   ;;    This means the lang field will be fetched from cookie named `name'.
+   ;;    NOTE: The #:cookies mode will be automatically enabled.
+   ;;    NOTE: Cookies i18n is recommended for the implementation of services
+   ;;          with session configure like CMS dashboard. However, you need
+   ;;          to set a controller to set the i18n cookie.
+   ;; 3. HTTP header "Accept-Language"
+   ;;    NOTE: Only the first lang will be used, if client sends multiple.
+   ;;    (get "/index" #:i18n 'header ...)
+   ;;    NOTE: Header i18n is recommended for the services with sessionless
+   ;;          services like Web API, when you want to unify the URL without
+   ;;          adding extra lang field.
+   (#:i18n . ,i18n-maker)))
 
 (define-macro (meta-handler-register what)
-  `(define-syntax-rule (,(symbol-append ': what) rc args ...)
-     (=> ,(symbol->keyword what) rc args ...)))
+  `(define-syntax-rule (,(symbol-append ': what) ?rc args ...)
+     (=> ,(symbol->keyword what) ?rc args ...)))
 
 ;; register all the meta handler
 (meta-handler-register sql-mapping)
@@ -786,6 +824,9 @@
 (meta-handler-register from-post)
 (meta-handler-register websocket)
 (meta-handler-register lpc)
+
+;; No rc
+(meta-handler-register i18n)
 
 (define-syntax-rule (:cookies-set! rc ck k v)
   ((:cookies rc 'set) ck k v))
@@ -826,6 +867,10 @@
              ((or h (eq? k #:handler))
               ;; #:handler is user customed handler
               (cond
+               ((eq? k #:i18n)
+                (match v
+                  (('cookie name)
+                   (init-oht! oht #:cookies '(lang) rule keys))))
                ((or (eq? k #:auth) (eq? k #:with-auth))
                 ;; 1. If #:session and #:with-auth are not initialized
                 ;;    simultaneously, then init it with default option

@@ -1,0 +1,63 @@
+;;  -*-  indent-tabs-mode:nil; coding: utf-8 -*-
+;;  === Websocket tests ===
+;;  Copyright (C) 2024
+;;      "Mu Lei" known as "NalaGinrut" <NalaGinrut@gmail.com>
+;;  Artanis is free software: you can redistribute it and/or modify
+;;  it under the terms of the GNU General Public License and GNU
+;;  Lesser General Public License published by the Free Software
+;;  Foundation, either version 3 of the License, or (at your option)
+;;  any later version.
+
+;;  Artanis is distributed in the hope that it will be useful,
+;;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;  GNU General Public License and GNU Lesser General Public License
+;;  for more details.
+
+;;  You should have received a copy of the GNU General Public License
+;;  and GNU Lesser General Public License along with this program.
+;;  If not, see <http://www.gnu.org/licenses/>.
+
+(define-module (test i18n)
+  #:use-module (artanis utils)
+  #:use-module (artanis artanis)
+  #:use-module (artanis i18n)
+  #:use-module (test-suite lib))
+
+(define *virtual-time* 1735325608)
+
+(define url-mode-request
+  "GET /index/ja_JP HTTP/1.1\r
+Host: localhost:8080\r
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-us) AppleWebKit/531.2+ (KHTML, like Gecko) Safari/531.2+ Epiphany/2.30.2\r
+\r")
+
+(define url-mode-expect-body
+  "
+")
+
+(get "/index/:lang"
+  #:i18n "lang"
+  (lambda (rc)
+    (let* ((_G (:i18n rc))
+           (money (_G `(money 15000)))
+           (smoney (_G `(moneysign 15000)))
+           (num (_G `(number 15000 2)))
+           (local-date (_G `(local-date ,*virtual-time*)))
+           (global-date (_G `(global-date ,*virtual-time*)))
+           (day (_G `(day ,*virtual-time*)))
+           (month (_G `(month ,*virtual-time*)))
+           (year (_G `(year ,*virtual-time*))))
+      ())))
+
+(with-test-prefix "i18n test"
+
+  (pass-if "i18n URL mode test"
+    ())
+
+  (pass-if "websocket one frame as string decode"
+    (let ((str (websocket-decode-body-string "\x81\x8cÿ¸½½·ÝÑÑ\x90\x98êÒ\x8dÔÙ\x9c")))
+      (string=? str "Hello World!")))
+
+  ;; TODO: fill other tests
+  )
