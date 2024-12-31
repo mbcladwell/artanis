@@ -1,5 +1,5 @@
 ;;  -*-  indent-tabs-mode:nil; coding: utf-8 -*-
-;;  Copyright (C) 2014-2021,2024
+;;  Copyright (C) 2014-2025
 ;;      "Mu Lei" known as "NalaGinrut" <NalaGinrut@gmail.com>
 ;;  Artanis is free software: you can redistribute it and/or modify
 ;;  it under the terms of the GNU General Public License and GNU
@@ -43,6 +43,7 @@
   #:use-module (artanis security nss)
   #:use-module (artanis irregex)
   #:use-module (artanis lpc)
+  #:use-module (artanis i18n)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
@@ -77,7 +78,8 @@
              :session
              :from-post
              :websocket
-             :lpc))
+             :lpc
+             :i18n))
 
 (define (http-options-add! method rule)
   (let* ((digest (string->sha-1 rule))
@@ -602,18 +604,24 @@
 
 (define (i18n-maker val rule keys)
   (define-syntax-rule (from-url rc field)
-    (make-i18n-handler (params rc field)))
-  (define-syntax-rule (from-cookie rc cookie-name)
-    (make-i18n-handler (:cookies-ref rc 'lang cookie-name)))
+    (parameterize ((current-lang (params rc field)))
+      (make-i18n-handler)))
+  (define-syntax-rule (from-cookie rc key)
+    (let ((lang ((=> #:cookies rc 'value) key)))
+      (parameterize ((current-lang lang))
+        (make-i18n-handler))))
   (define-syntax-rule (from-header rc)
-    (let ((lang (get-header rc "Accept-Language")))
-      (make-i18n-handler (gnu-locale->http-lang-tag lang))))
+    (let ((lang (match (get-header rc 'accept-language)
+                  (((_ . lang) . rest) lang)
+                  (else ""))))
+      (parameterize ((current-lang (http-lang-tag->gnu-locale lang)))
+        (make-i18n-handler))))
   (lambda (rc)
-    (match cmd
+    (match val
       ((? string? field) (from-url rc field))
       (`(cookie ,name) (from-cookie rc name))
       ('header (from-header rc))
-      (else (throw 'artanis-err 500 i18n-maker "Invalid cmd `~a'!" cmd)))))
+      (else (throw 'artanis-err 500 i18n-maker "Invalid cmd `~a'!" val)))))
 
 ;; -------------------------------------------------------------------
 
@@ -867,10 +875,6 @@
              ((or h (eq? k #:handler))
               ;; #:handler is user customed handler
               (cond
-               ((eq? k #:i18n)
-                (match v
-                  (('cookie name)
-                   (init-oht! oht #:cookies '(lang) rule keys))))
                ((or (eq? k #:auth) (eq? k #:with-auth))
                 ;; 1. If #:session and #:with-auth are not initialized
                 ;;    simultaneously, then init it with default option
@@ -878,7 +882,7 @@
                 (when (not (hash-ref oht #:cookies))
                   (init-oht! oht #:cookies #t rule keys))
                 (init-oht! oht #:session #t rule keys))
-               ((eq? k #:session)
+               ((or (eq? k #:session) (eq? k #:i18n))
                 ;; #:session requires #:cookies
                 (when (not (hash-ref oht #:cookies))
                   (init-oht! oht #:cookies #t rule keys))))

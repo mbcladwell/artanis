@@ -1,5 +1,5 @@
 ;;  -*-  indent-tabs-mode:nil; coding: utf-8 -*-
-;;  Copyright (C) 2024
+;;  Copyright (C) 2025
 ;;      "Mu Lei" known as "NalaGinrut" <NalaGinrut@gmail.com>
 ;;  Artanis is free software: you can redistribute it and/or modify
 ;;  it under the terms of the GNU General Public License and GNU
@@ -17,8 +17,7 @@
 ;;  and GNU Lesser General Public License along with this program.
 ;;  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (artanis i18n json)
-  #:use-module (gettext)
+(define-module (artanis i18n po)
   #:export (i18n-po-init))
 
 ;; NOTE:

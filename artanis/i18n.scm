@@ -1,5 +1,5 @@
 ;;  -*-  indent-tabs-mode:nil; coding: utf-8 -*-
-;;  Copyright (C) 2024
+;;  Copyright (C) 2025
 ;;      "Mu Lei" known as "NalaGinrut" <NalaGinrut@gmail.com>
 ;;  Artanis is free software: you can redistribute it and/or modify
 ;;  it under the terms of the GNU General Public License and GNU
@@ -17,31 +17,32 @@
 ;;  and GNU Lesser General Public License along with this program.
 ;;  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (artanis i18n json)
+(define-module (artanis i18n)
   #:use-module (artanis config)
   #:use-module (artanis i18n json)
   #:use-module (artanis i18n po)
   #:use-module (ice-9 i18n)
   #:use-module (ice-9 match)
-  #:export (i18n-init
+  #:export (make-i18n-handler
+            i18n-init
             current-lang
             i18n-handler))
 
 (define i18n-getter (make-parameter #f))
 
-(define current-lang (make-parameter #f))
+(define current-lang (make-parameter "BUG: the current-lang is not set!"))
 
 (define* (make-i18n-handler)
   (define (->fix lang)
-    (let ((encoding (get-conf '(session encoding))))
+    (let ((encoding (get-conf '(server charset))))
       (string-concatenate (list lang "." encoding))))
   (let* ((lang (current-lang))
-         (locale (make-locale LC_ALL (->fix lang))))
+         (locale (make-locale (list LC_ALL) (->fix lang))))
     (lambda (pattern)
       (match pattern
         ((? string? key)
          (cond
-          ((not lang) key)
+          ((string-null? lang) key)
           ((i18n-getter)
            => (lambda (getter)
                 (or (getter lang key)
@@ -55,31 +56,29 @@
          ;; NOTE: Of course I know CNY is actually ￥, and JPY is actually ¥.
          ;;       But they are the same string detected from GNU libc.
          (let ((num (if (number? money) money (string->number money))))
-           ((monetary-amount->locale-string num #t locale))))
+           (monetary-amount->locale-string num #t locale)))
         (('moneysign money)
          (let ((num (if (number? money) money (string->number money))))
            ;; NOTE: The GNU lib on Linux will add "-" automatically for
            ;;       historical reasons. Say, "-$", so we have to drop it.
            (string-trim
             (monetary-amount->locale-string num #f locale)
-            #:\-)))
+            #\-)))
         (('number number fraction)
-         (number->locale-string num fraction locale))
+         (number->locale-string number fraction locale))
         (('local-date seconds)
          (strftime (locale-date-format locale) (localtime seconds)))
-        (('global-data seconds)
-         (strftime (global-date-format locale) (gmtime seconds)))
+        (('global-date seconds)
+         (strftime (locale-date-format locale) (gmtime seconds)))
         (('local-time seconds)
          (strftime (locale-time-format locale) (localtime seconds)))
         (('global-time seconds)
-         (strftime (global-time-format locale) (gmtime seconds)))
-        (('year year)
-         (locale-year year locale))
-        (('day day)
-         (locale-day day locale))
+         (strftime (locale-time-format locale) (gmtime seconds)))
+        (('weekday weekday)
+         (locale-day weekday locale))
         (('month month)
          (locale-month month locale))
-        (else (throw 'artanis-error 500 :i18n
+        (else (throw 'artanis-error 500 make-i18n-handler
                      "Unknown i18n pattern" pattern))))))
 
 (define (i18n-init)

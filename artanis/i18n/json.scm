@@ -1,5 +1,5 @@
 ;;  -*-  indent-tabs-mode:nil; coding: utf-8 -*-
-;;  Copyright (C) 2024
+;;  Copyright (C) 2025
 ;;      "Mu Lei" known as "NalaGinrut" <NalaGinrut@gmail.com>
 ;;  Artanis is free software: you can redistribute it and/or modify
 ;;  it under the terms of the GNU General Public License and GNU
@@ -36,7 +36,7 @@
 
 (define (i18n-json-init)
   (define (load-json-file file)
-    (let ((locale (irregex-exec *i18n-json-file-re* file) 1))
+    (let ((locale (irregex-match *i18n-json-file-re* file)))
       (cond
        ((not locale) (error "i18n: Invalid json file name: ~a" file))
        (hash-set! *i18n-json-table*

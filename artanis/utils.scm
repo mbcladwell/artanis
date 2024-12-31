@@ -1645,7 +1645,7 @@
      (else
       (assoc-set! new-lst key (cons val v))))))
 
-(define *http-lang-tag-re* (string->irregex "([a-z]+)-([A-Z]+"))
+(define *http-lang-tag-re* (string->irregex "([a-z]+)-([A-Z])+"))
 (define (http-lang-tag->gnu-locale lang)
   ;; replace - with _
   (if (irregex-match *http-lang-tag-re* lang)
@@ -1653,7 +1653,7 @@
       (throw 'artanis-err 500 http-lang-tag->gnu-locale
              "Invalid HTTP lang tag format: ~a" lang)))
 
-(define *gnu-locale-re* (string->irregex "([a-z]+)_([A-Z]+"))
+(define *gnu-locale-re* (string->irregex "([a-z]+)_([A-Z])+"))
 (define (gnu-locale->http-lang-tag lang)
   ;; replace _ with -
   (if (irregex-match *gnu-locale-re* lang)
