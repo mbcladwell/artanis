@@ -114,7 +114,7 @@
 (define (clean-stuffs)
   (define toplevel (current-toplevel))
   (define route-cache (format #f "~a/cache/route.cache" (current-tmp)))
-  (define route (format #f "~a/.route" toplevel))
+  (define route (format #f "~a/.route" (current-tmp)))
   (define-syntax-rule (clean-it f)
     (when (file-exists? f) (delete-file f)))
   (clean-it route-cache)
