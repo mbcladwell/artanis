@@ -142,7 +142,7 @@
   (or (current-toplevel) "./"))
 
 (define (current-tmp)
-  (let ((tmp (format #f "~a/tmp" (proper-toplevel))))
+  (let ((tmp "/tmp")))
     (when (not (file-exists? tmp))
       (mkdir tmp))
     tmp))
