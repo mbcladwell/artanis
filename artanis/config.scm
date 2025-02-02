@@ -397,6 +397,10 @@ session.i18n = json | po | <third-party-engine>")
      This will take advantage of `inotify' in GNU/Linux kernel.
      NOTE: We may support GNU/Hurd as well, with its file monitor mechanism, in the future.
      debug.monitor = <PATHs>")
+    ((cookie maxplates)
+     10
+     "Maximum number of plates per plate-set.
+     cookie.maxplates = <integer>")
     ((cookie expires)
      3600
      "Cookie expiration time in seconds.
@@ -595,6 +599,7 @@ session.i18n = json | po | <third-party-engine>")
 (define (parse-namespace-cookie item)
   (match item
     (('expires expires) (conf-set! '(cookie expires) (->integer expires)))
+    (('maxplates maxplates) (conf-set! '(cookie maxplates) (->integer maxplates)))
     (else (error parse-namespace-cookie "Config: Invalid item" item))))
 
 (define (parse-config-item item)
